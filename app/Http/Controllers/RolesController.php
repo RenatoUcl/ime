@@ -3,83 +3,59 @@
 namespace App\Http\Controllers;
 
 use App\Models\Roles;
+use App\Models\Permiso;
+use App\Http\Requests\RoleRequest;
+use App\Http\Requests\PermisoRequest;
+
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use App\Http\Requests\RoleRequest;
+
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\View\View;
 
 class RolesController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index(Request $request): View
     {
         $roles = Roles::paginate();
-
         return view('role.index', compact('roles'))
             ->with('i', ($request->input('page', 1) - 1) * $roles->perPage());
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
     public function create(): View
     {
         $role = new Roles();
-
         return view('role.create', compact('role'));
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(RoleRequest $request): RedirectResponse
+    public function store(Request $request)
     {
-        Roles::create($request->validated());
-
-        return Redirect::route('role.index')
-            ->with('success', 'Role created successfully.');
+        $role = Roles::create($request->only(['nombre', 'descripcion']));
+        if ($request->has('permissions')) {
+            $role->permissions()->sync($request->permissions);
+        }
+        return $role;
     }
 
-    /**
-     * Display the specified resource.
-     */
+    public function update(Request $request, Role $role)
+    {
+        $role->update($request->only(['nombre', 'descripcion']));
+        if ($request->has('permissions')) {
+            $role->permissions()->sync($request->permissions);
+        }
+        return $role;
+    }
+
     public function show($id): View
     {
         $role = Roles::find($id);
-
         return view('role.show', compact('role'));
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
     public function edit($id): View
     {
         $role = Roles::find($id);
-
         return view('role.edit', compact('role'));
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(RoleRequest $request, $role): RedirectResponse
-    {
-        //$role->update($request->validated());
-
-        $rol = Roles::find($role);
-
-        $rol->nombre = $request->nombre;
-        $rol->descripcion = $request->descripcion;
-        $rol->estado = $request->estado;
-
-        $rol->save();
-
-        return Redirect::route('role.index')
-            ->with('success', 'Rol actualizado satisfactoriamente');
     }
 
     public function disabled($id): RedirectResponse
@@ -87,7 +63,6 @@ class RolesController extends Controller
         $rol = Roles::find($id);
         $rol->estado = 0;
         $rol->save();
-
         return Redirect::route('role.index')
         ->with('success', 'Rol desactivado satisfactoriamente');
     }
@@ -95,8 +70,27 @@ class RolesController extends Controller
     public function destroy($id): RedirectResponse
     {
         Roles::find($id)->delete();
-
         return Redirect::route('role.index')
             ->with('success', 'Role deleted successfully');
+    }
+
+    public function asignarPermisos(Request $request, $id)
+    {
+        $rol = Roles::findOrFail($id);  // Encuentra el rol por ID
+        $permisosIds = $request->input('permisos');  // Recibe los IDs de los permisos seleccionados desde el formulario
+
+        // Asigna los permisos seleccionados al rol
+        $rol->permisos()->sync($permisosIds);  // Puedes usar attach() o syncWithoutDetaching() también
+
+        return redirect()->route('roles.index')
+                        ->with('success', 'Permisos asignados correctamente al rol');
+    }
+
+    public function mostrarFormularioAsignarPermisos($id)
+    {
+        $rol = Roles::findOrFail($id);
+        $permisos = Permiso::all();  // Obtener todos los permisos
+
+        return view('roles.asignar', compact('rol', 'permisos'));
     }
 }

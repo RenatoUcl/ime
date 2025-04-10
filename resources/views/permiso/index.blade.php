@@ -15,7 +15,7 @@
                             </span>
 
                              <div class="float-right">
-                                <a href="{{ route('permisos.create') }}" class="btn btn-primary btn-sm float-right"  data-placement="left">
+                                <a href="{{ route('permiso.create') }}" class="btn btn-primary btn-sm float-right"  data-placement="left">
                                   {{ __('Create New') }}
                                 </a>
                               </div>
@@ -51,9 +51,9 @@
 										<td >{{ $permiso->estado }}</td>
 
                                             <td>
-                                                <form action="{{ route('permisos.destroy', $permiso->id) }}" method="POST">
-                                                    <a class="btn btn-sm btn-primary " href="{{ route('permisos.show', $permiso->id) }}"><i class="fa fa-fw fa-eye"></i> {{ __('Show') }}</a>
-                                                    <a class="btn btn-sm btn-success" href="{{ route('permisos.edit', $permiso->id) }}"><i class="fa fa-fw fa-edit"></i> {{ __('Edit') }}</a>
+                                                <form action="{{ route('permiso.disabled', $permiso->id) }}" method="POST">
+                                                    <a class="btn btn-sm btn-primary " href="{{ route('permiso.show', $permiso->id) }}"><i class="fa fa-fw fa-eye"></i> {{ __('Show') }}</a>
+                                                    <a class="btn btn-sm btn-success" href="{{ route('permiso.edit', $permiso->id) }}"><i class="fa fa-fw fa-edit"></i> {{ __('Edit') }}</a>
                                                     @csrf
                                                     @method('DELETE')
                                                     <button type="submit" class="btn btn-danger btn-sm" onclick="event.preventDefault(); confirm('Are you sure to delete?') ? this.closest('form').submit() : false;"><i class="fa fa-fw fa-trash"></i> {{ __('Delete') }}</button>

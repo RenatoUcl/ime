@@ -59,18 +59,20 @@ Route::middleware("auth")->group(function (){
         Route::get('/roles/edit/{id}', 'edit')->name('role.edit');
         Route::put('/roles/update/{id}', 'update')->name('role.update');
         Route::put('/roles/disabled/{id}', 'disabled')->name('role.disabled');
+        Route::get('/roles/asignar/{id}', 'mostrarFormularioAsignarPermisos')->name('permiso.mostrar');
+        Route::post('/roles/asignar/{id}', 'asignarPermisos')->name('permiso.asignar');
         //Route::delete('/roles/destroy/{id}', 'destroy')->name('role.destroy');
     });
 
     // Permisos
     Route::controller(PermisoController::class)->group(function(){
-        Route::get('/permisos','index')->name('permisos');
-        Route::get('/permisos/create','create')->name('permisos.create');
-        Route::post('/permisos/store', 'store')->name('permisos.store');
-        Route::get('/permisos/show/{id}', 'show')->name('permisos.show');
-        Route::get('/permisos/edit/{id}', 'edit')->name('permisos.edit');
-        Route::put('/permisos/update/{id}', 'update')->name('permisos.update');
-        Route::put('/permisos/disabled/{id}', 'disabled')->name('permisos.disabled');
+        Route::get('/permisos','index')->name('permiso.index');
+        Route::get('/permisos/create','create')->name('permiso.create');
+        Route::post('/permisos/store', 'store')->name('permiso.store');
+        Route::get('/permisos/show/{id}', 'show')->name('permiso.show');
+        Route::get('/permisos/edit/{id}', 'edit')->name('permiso.edit');
+        Route::put('/permisos/update/{permiso}', 'update')->name('permiso.update');
+        Route::put('/permisos/disabled/{id}', 'disabled')->name('permiso.disabled');
         //Route::delete('/permisos/destroy/{id}', 'destroy')->name('permisos.destroy');
     });
 

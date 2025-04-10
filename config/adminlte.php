@@ -357,14 +357,18 @@ return [
                     'icon' => 'fas fa-user-tag',
                     'route' => 'role.index',
                 ],
-                /*
                 [
                     'text' => 'Permisos',
                     'shift' => 'ml-3',
                     'icon' => 'fas fa-hand-sparkles',
-                    'route' => 'permisos',
+                    'route' => 'permiso.index',
                 ],
-                */
+                [
+                    'text' => 'Asignar Permisos',
+                    'shift' => 'ml-3',
+                    'icon' => 'fas fa-hand-sparkles',
+                    'route' => 'permiso.mostrar',
+                ],
             ],
         ],
         [

@@ -35,11 +35,22 @@ class AuthController extends Controller
             'password' => $request->password,
         ];
 
+        /*
         if (Auth::attempt($credenciales)){
             return to_route('home');
         } else {
             return to_route('registro');
         }
+        */
+
+        if (Auth::attempt($credenciales)) {
+            $request->session()->regenerate();
+            return redirect()->intended('home'); // o donde quieras
+        }
+    
+        return back()->withErrors([
+            'email' => 'Credenciales incorrectas.',
+        ])->onlyInput('email');
     }
 
     public function home(){

@@ -24,7 +24,6 @@ use Illuminate\Database\Eloquent\Model;
  */
 class Roles extends Model
 {
-    
     protected $perPage = 20;
 
     /**
@@ -34,45 +33,14 @@ class Roles extends Model
      */
     protected $fillable = ['nombre', 'descripcion', 'estado'];
 
+    public function users()
+    {
+        return $this->belongsToMany(User::class, 'roles_usuarios', 'id_rol', 'id_user');
+    }
 
-    /**
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany
-     */
-    public function nivelesPrimarios()
+    public function permissions()
     {
-        return $this->hasMany(\App\Models\NivelesPrimario::class, 'id', 'id_rol');
+        return $this->belongsToMany(Permiso::class, 'permisos_roles', 'id_rol', 'id_permiso');
     }
-    
-    /**
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany
-     */
-    public function nivelesSecundarios()
-    {
-        return $this->hasMany(\App\Models\NivelesSecundario::class, 'id', 'id_rol');
-    }
-    
-    /**
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany
-     */
-    public function nivelesTerciarios()
-    {
-        return $this->hasMany(\App\Models\NivelesTerciario::class, 'id', 'id_rol');
-    }
-    
-    /**
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany
-     */
-    public function permisosRoles()
-    {
-        return $this->hasMany(\App\Models\PermisosRole::class, 'id', 'id_rol');
-    }
-    
-    /**
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany
-     */
-    public function rolesUsuarios()
-    {
-        return $this->hasMany(\App\Models\RolesUsuario::class, 'id', 'id_user');
-    }
-    
+
 }

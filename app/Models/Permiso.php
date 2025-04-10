@@ -31,12 +31,9 @@ class Permiso extends Model
     protected $fillable = ['nombre', 'descripcion', 'estado'];
 
 
-    /**
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany
-     */
-    public function permisosRoles()
+    public function roles()
     {
-        return $this->hasMany(\App\Models\PermisosRole::class, 'id', 'id_permiso');
+        return $this->belongsToMany(Roles::class, 'permisos_roles', 'id_permiso', 'id_rol');
     }
     
 }
