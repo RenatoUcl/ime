@@ -59,8 +59,8 @@ Route::middleware("auth")->group(function (){
         Route::get('/roles/edit/{id}', 'edit')->name('role.edit');
         Route::put('/roles/update/{id}', 'update')->name('role.update');
         Route::put('/roles/disabled/{id}', 'disabled')->name('role.disabled');
-        Route::get('/roles/asignar/{id}', 'mostrarFormularioAsignarPermisos')->name('permiso.mostrar');
-        Route::post('/roles/asignar/{id}', 'asignarPermisos')->name('permiso.asignar');
+        Route::get('/roles/mostrar/{id}', 'mostrar')->name('role.mostrar');
+        Route::post('/roles/asignar/{id}', 'asignar')->name('role.asignar');
         //Route::delete('/roles/destroy/{id}', 'destroy')->name('role.destroy');
     });
 
@@ -181,6 +181,8 @@ Route::middleware("auth")->group(function (){
         Route::get('/encuesta/edit/{id}', 'edit')->name('encuesta.edit');
         Route::put('/encuesta/update/{id}', 'update')->name('encuesta.update');
         Route::put('/encuesta/disabled/{id}', 'disabled')->name('encuesta.disabled');
+        Route::get('/encuesta/{id}/iniciar', 'iniciar')->name('encuesta.iniciar');
+        Route::post('/encuesta/responder', 'responder')->name('encuesta.responder');
         //Route::delete('/encuestas/destroy/{id}', 'destroy')->name('encuestas.destroy');
     });
 

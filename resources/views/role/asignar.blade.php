@@ -9,7 +9,7 @@
                         <span class="card-title">Asignar Permisos</span>
                     </div>
                     <div class="card-body bg-white">
-                        <form method="POST" action="{{ route('role.asignarPermisos', $rol->id) }}" role="form" enctype="multipart/form-data">
+                        <form method="POST" action="{{ route('role.asignar', $rol->id) }}" role="form" enctype="multipart/form-data">
                             @csrf
                             @method('PUT')
                             <div class="form-group">
@@ -17,7 +17,7 @@
                                 <select name="permisos[]" id="permisos" class="form-control" multiple>
                                     @foreach ($permisos as $permiso)
                                         <option value="{{ $permiso->id }}" 
-                                            {{ in_array($permiso->id, $rol->permisos->pluck('id')->toArray()) ? 'selected' : '' }}>
+                                            {{ in_array($permiso->id, optional($rol->permisos) ?? []) ? 'selected' : '' }}
                                             {{ $permiso->nombre }}
                                         </option>
                                     @endforeach

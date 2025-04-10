@@ -9,9 +9,30 @@
         </div>
         <div class="form-group mb-2 mb20">
             <label for="descripcion" class="form-label">{{ __('Descripcion') }}</label>
+            <!--
             <input type="text" name="descripcion" class="form-control @error('descripcion') is-invalid @enderror"
                 value="{{ old('descripcion', $encuesta?->descripcion) }}" id="descripcion" placeholder="Descripcion">
+            -->
+            <textarea name="descripcion"  class="form-control @error('descripcion') is-invalid @enderror" id="descripcion" placeholder="Descripcion">
+                {{ old('descripcion', $encuesta?->descripcion) }}
+            </textarea>
             {!! $errors->first('descripcion', '<div class="invalid-feedback" role="alert"><strong>:message</strong></div>') !!}
+        </div>
+        <div class="form-group mb-2 mb20">
+            <label for="linea" class="form-label">Linea Programatica</label>
+            <select name="linea" id="linea" class="form-control">
+                @if($encuesta->id_linea==0)
+                    <option value="0" selected>Seleccione una Linea programatica</option>
+                @endif
+                @foreach ($lineas as $linea)
+                    @if($encuesta->id_linea == $linea->id)
+                    <option value="{{ $linea->id }}" selected>{{ $linea->nombre }}</option>
+                    @else
+                    <option value="{{ $linea->id }}">{{ $linea->nombre }}</option>
+                    @endif
+                @endforeach
+                
+            </select>
         </div>
         <div class="form-group mb-2 mb20">
             <button type="button" class="btn btn-success" data-toggle="modal" data-target="#Modal1">Agregar Cabecera</button>

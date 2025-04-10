@@ -17,6 +17,9 @@ class DatabaseSeeder extends Seeder
             RolesSeeder::class,
             PermisosSeeder::class,
             UsuariosSeeder::class,
+            LineasProgramaticasSeeder::class,
+            DimensionesSeeder::class,
+            SubdimensionesSeeder::class,
         ]);
     }
 }

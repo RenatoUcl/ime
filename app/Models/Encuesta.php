@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
  * Class Encuesta
  *
  * @property $id
+ * @property $id_linea
  * @property $nombre
  * @property $descripcion
  * @property $estado
@@ -22,8 +23,7 @@ use Illuminate\Database\Eloquent\Model;
  * @mixin \Illuminate\Database\Eloquent\Builder
  */
 class Encuesta extends Model
-{
-    
+{    
     protected $perPage = 20;
 
     /**
@@ -31,7 +31,7 @@ class Encuesta extends Model
      *
      * @var array<int, string>
      */
-    protected $fillable = ['nombre', 'descripcion', 'estado'];
+    protected $fillable = ['id_linea', 'nombre', 'descripcion', 'estado'];
 
 
     /**
@@ -64,6 +64,11 @@ class Encuesta extends Model
     public function preguntas()
     {
         return $this->hasMany(\App\Models\Pregunta::class, 'id', 'id_encuesta');
+    }
+
+    public function linea()
+    {
+        return $this->belongsTo(LineaProgramatica::class, 'id_linea');
     }
     
 }

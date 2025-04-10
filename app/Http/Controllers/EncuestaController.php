@@ -1,25 +1,26 @@
 <?php
-
 namespace App\Http\Controllers;
 
 use App\Models\Encuesta;
-use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
-use App\Http\Requests\EncuestaRequest;
 use App\Models\Alternativa;
 use App\Models\CabeceraAlternativa;
 use App\Models\CabeceraPregunta;
 use App\Models\Pregunta;
 use App\Models\Dimension;
 use App\Models\Subdimension;
+use App\Models\LineasProgramaticas;
+
+use App\Http\Requests\EncuestaRequest;
+
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\View\View;
 
 class EncuestaController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
+
     public function index(Request $request): View
     {
         $encuestas = Encuesta::paginate();
@@ -34,6 +35,7 @@ class EncuestaController extends Controller
     public function create(): View
     {
         $encuesta = new Encuesta();
+        $lineas = LineasProgramaticas::all();
         $dimensiones = Dimension::all();
         $subdimensiones = Subdimension::all();
 
@@ -42,7 +44,7 @@ class EncuestaController extends Controller
         $cabeceras = null;
         $cabeceras_alternativas = null;
 
-        return view('encuesta.create', compact('encuesta', 'subdimensiones', 'preguntas', 'alternativas', 'cabeceras', 'cabeceras_alternativas','dimensiones'));
+        return view('encuesta.create', compact('encuesta','lineas','dimensiones','subdimensiones','preguntas','alternativas','cabeceras','cabeceras_alternativas'));
     }
 
     /**
@@ -52,17 +54,19 @@ class EncuestaController extends Controller
     {
         Encuesta::create($request->validated());
 
+        dd($request->toArray());
+
+        // Crear la nueva encuesta
+        $encuesta = new Encuesta();
+        $encuesta->id_linea = $validated['id_linea'];
+        $encuesta->nombre = $validated['nombre'];
+        $encuesta->descripcion = $validated['descripcion'] ?? '';
+        $encuesta->estado = true;
+
+        $encuesta->save();
+
         $lastid = Encuesta::latest()->first()->id;
 
-        if ($request->input('action') === 'crear_pregunta') {
-
-            $pregunta = new Pregunta();
-            $pregunta->id_encuesta = $lastid;
-            $pregunta->id_subdimension = $request->id_subdimension;
-            $pregunta->texto = $request->preguntax;
-            $pregunta->tipo = $request->tipo;
-            $pregunta->save();
-        }
         return Redirect::route('encuesta.edit', $lastid)
             ->with('success', 'Encuesta created successfully.');
     }
@@ -213,4 +217,43 @@ class EncuestaController extends Controller
         return Redirect::route('encuesta.index')
             ->with('success', 'Encuesta deleted successfully');
     }
+
+    // Inicia la encuesta uno a uno
+
+    public function iniciar($id)
+    {
+        $encuesta = Encuesta::findOrFail($id);
+        $pregunta = $encuesta->preguntas()->orderBy('posicion')->first();
+    
+        return view('encuesta.responder', compact('encuesta', 'pregunta'));
+    }
+    
+    public function responder(Request $request)
+    {
+        // Guardar la respuesta actual
+        Respuesta::create([
+            'id_pregunta' => $request->id_pregunta,
+            'id_alternativa' => $request->id_alternativa,
+            'texto' => $request->texto,
+            'valor' => $request->valor ?? 0,
+            'nivel' => $request->nivel ?? 0,
+        ]);
+    
+        // Buscar la siguiente pregunta
+        $preguntaActual = Pregunta::find($request->id_pregunta);
+        $preguntaSiguiente = Pregunta::where('id_encuesta', $preguntaActual->id_encuesta)
+            ->where('posicion', '>', $preguntaActual->posicion)
+            ->orderBy('posicion')
+            ->first();
+    
+        if ($preguntaSiguiente) {
+            return response()->json([
+                'success' => true,
+                'html' => view('encuesta.pregunta', ['pregunta' => $preguntaSiguiente])->render()
+            ]);
+        } else {
+            return response()->json(['success' => true, 'terminado' => true]);
+        }
+    }
+    
 }

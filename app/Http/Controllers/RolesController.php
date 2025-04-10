@@ -74,7 +74,15 @@ class RolesController extends Controller
             ->with('success', 'Role deleted successfully');
     }
 
-    public function asignarPermisos(Request $request, $id)
+    public function mostrar($id)
+    {
+        $rol = Roles::findOrFail($id);
+        $permisos = Permiso::all();  // Obtener todos los permisos
+
+        return view('role.asignar', compact('rol', 'permisos'));
+    }
+
+    public function asignar(Request $request, $id)
     {
         $rol = Roles::findOrFail($id);  // Encuentra el rol por ID
         $permisosIds = $request->input('permisos');  // Recibe los IDs de los permisos seleccionados desde el formulario
@@ -82,15 +90,7 @@ class RolesController extends Controller
         // Asigna los permisos seleccionados al rol
         $rol->permisos()->sync($permisosIds);  // Puedes usar attach() o syncWithoutDetaching() también
 
-        return redirect()->route('roles.index')
-                        ->with('success', 'Permisos asignados correctamente al rol');
-    }
-
-    public function mostrarFormularioAsignarPermisos($id)
-    {
-        $rol = Roles::findOrFail($id);
-        $permisos = Permiso::all();  // Obtener todos los permisos
-
-        return view('roles.asignar', compact('rol', 'permisos'));
+        return Redirect::route('role.index')
+               ->with('success', 'Permisos asignados correctamente al rol');
     }
 }

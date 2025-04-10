@@ -16,6 +16,7 @@
                     <div class="card-body bg-white">
                         <form method="POST" action="{{ route('encuesta.store') }}" role="form" enctype="multipart/form-data">
                             @csrf
+                            @method('POST')
                             @include('encuesta.form')
                         </form>
                     </div>

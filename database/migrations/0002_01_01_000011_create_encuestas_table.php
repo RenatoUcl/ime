@@ -10,10 +10,16 @@ return new class extends Migration
     {
         Schema::create('encuestas', function (Blueprint $table) {
             $table->id();
+            $table->unsignedBigInteger('id_linea'); 
             $table->string('nombre');
             $table->text('descripcion');
             $table->boolean('estado')->default(true);
             $table->timestamps();
+
+            $table->foreign('id_linea')
+                  ->references('id')
+                  ->on('lineas_programaticas')
+                  ->onDelete('cascade');
         });
     }
 
