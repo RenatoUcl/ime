@@ -33,20 +33,11 @@ class EncuestaController extends Controller
     {
         $encuesta = new Encuesta();
         $lineas = LineasProgramaticas::all();
-        $dimensiones = Dimension::all();
-        $subdimensiones = Subdimension::all();
-
-        $preguntas = null;
-        $alternativas = null;
-        $cabeceras = null;
-        $cabeceras_alternativas = null;
-
-        return view('encuesta.create', compact('encuesta','lineas','dimensiones','subdimensiones','preguntas','alternativas','cabeceras','cabeceras_alternativas'));
+        return view('encuesta.create', compact('encuesta','lineas'));
     }
 
     public function store(EncuestaRequest $request): RedirectResponse
     {
-        dd($request);
         Encuesta::create($request->validated());
         $lastid = Encuesta::latest()->first()->id;
 
@@ -54,21 +45,16 @@ class EncuestaController extends Controller
             ->with('success', 'Encuesta created successfully.');
     }
 
-    /**
-     * Display the specified resource.
-     */
     public function show($id): View
     {
         $encuesta = Encuesta::find($id);
         return view('encuesta.show', compact('encuesta'));
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
     public function edit($id): View
     {
         $encuesta = Encuesta::find($id);
+        $lineas = LineasProgramaticas::all();
         $dimensiones = Dimension::all();
         $subdimensiones = Subdimension::all();
         $preguntas = Pregunta::select(
@@ -109,22 +95,22 @@ class EncuestaController extends Controller
             $cabeceras_alternativas = null;
         }
 
-        return view('encuesta.edit', compact('encuesta', 'subdimensiones', 'preguntas', 'alternativas', 'cabeceras', 'cabeceras_alternativas','dimensiones'));
+        return view('encuesta.edit', compact('encuesta', 'lineas', 'dimensiones', 'subdimensiones', 'preguntas', 'alternativas', 'cabeceras', 'cabeceras_alternativas'));
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(EncuestaRequest $request, $encuesta): RedirectResponse
+    public function update(EncuestaRequest $request, $encuesta):RedirectResponse
     {
         //$encuesta->update($request->validated());
         // ID Encuesta
         $lastid = $request->id;
 
         if ($request->input('action') === 'actualizar_pregunta'){
+            
             $encuesta = Encuesta::find($lastid);
             $encuesta->nombre = $request->nombre;
             $encuesta->descripcion = $request->descripcion;
+            $encuesta->estado = $request->estado;
+            $encuesta->id_linea = $request->id_linea;
             $encuesta->save();
         }
         if ($request->input('action') === 'crear_pregunta') {

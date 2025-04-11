@@ -46,7 +46,7 @@
                                         <tr>
                                             <td>{{ ++$i }}</td>
                                             <td>{{ $encuesta->nombre }}</td>
-                                            <td>{{ $encuesta->descripcion }}</td>
+                                            <td>{!! $encuesta->descripcion !!}</td>
                                             <td>{{ $encuesta->created_at->format('d/m/Y') }}</td>
                                             <td>
                                                 @if ($encuesta->estado == true)

@@ -19,14 +19,13 @@
                     </div>
 
                     <div class="card-body bg-white">
-                        
                                 <div class="form-group mb-2 mb20">
                                     <strong>Nombre:</strong>
                                     {{ $encuesta->nombre }}
                                 </div>
                                 <div class="form-group mb-2 mb20">
                                     <strong>Descripcion:</strong>
-                                    {{ $encuesta->descripcion }}
+                                    {!! $encuesta->descripcion !!}
                                 </div>
                                 <div class="form-group mb-2 mb20">
                                     <strong>Estado:</strong>

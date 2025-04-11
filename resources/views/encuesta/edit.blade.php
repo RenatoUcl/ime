@@ -19,7 +19,6 @@
                                 <p>{{ $message }}</p>
                             </div>
                         @endif
-
                         <form method="POST" action="{{ route('encuesta.update', $encuesta->id) }}" role="form" enctype="multipart/form-data">
                             @csrf
                             @method('PUT')
