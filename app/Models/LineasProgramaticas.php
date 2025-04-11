@@ -20,5 +20,10 @@ class LineasProgramaticas extends Model
     protected $perPage = 20;
 
     protected $fillable = ['nombre', 'descripcion', 'estado'];
+
+    public function dimensiones()
+    {
+        return $this->hasMany(Dimension::class, 'id_linea');
+    }
    
 }

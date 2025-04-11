@@ -26,28 +26,16 @@ class Dimension extends Model
 
     protected $perPage = 20;
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var array<int, string>
-     */
     protected $fillable = ['id_linea', 'nombre', 'descripcion', 'estado'];
 
-
-    /**
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
-     */
-    public function lineasProgramatica()
+    public function linea()
     {
-        return $this->belongsTo(\App\Models\LineasProgramaticas::class, 'id_linea', 'id');
+        return $this->belongsTo(LineasProgramaticas::class, 'id_linea');
     }
-    
-    /**
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany
-     */
+
     public function subdimensiones()
     {
-        return $this->hasMany(\App\Models\Subdimension::class, 'id', 'id_dimension');
+        return $this->hasMany(Subdimension::class, 'id_dimension');
     }
     
 }

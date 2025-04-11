@@ -54,9 +54,11 @@ class EncuestaController extends Controller
     public function edit($id): View
     {
         $encuesta = Encuesta::find($id);
-        $lineas = LineasProgramaticas::all();
-        $dimensiones = Dimension::where('id_linea',$encuesta->id_linea)->get();
-        $subdimensiones = Subdimension::all();
+        $lineas = LineasProgramaticas::with('dimensiones.subdimensiones')->find($encuesta->id_linea);
+        $dimensiones = Dimension::where('id_linea', $encuesta->id_linea)->with('subdimensiones')->get();
+        
+        dd(collect($dimensiones[0]->subdimensiones));
+
         $preguntas = Pregunta::select(
             'preguntas.id',
             'preguntas.id_encuesta',

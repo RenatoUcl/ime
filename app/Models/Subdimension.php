@@ -34,7 +34,7 @@ class Subdimension extends Model
      */
     public function dimension()
     {
-        return $this->belongsTo(\App\Models\Dimension::class, 'id_dimension', 'id');
+        return $this->belongsTo(Dimension::class, 'id_dimension');
     }
     
     /**
