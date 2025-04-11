@@ -22,10 +22,11 @@ class EncuestaRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'id_linea' => 'required',
 			'nombre' => 'required|string',
 			'descripcion' => 'required|string',
+            'id_linea' => 'required',
 			'estado' => 'required'
         ];
     }
+
 }

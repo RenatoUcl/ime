@@ -29,9 +29,6 @@ class EncuestaController extends Controller
             ->with('i', ($request->input('page', 1) - 1) * $encuestas->perPage());
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
     public function create(): View
     {
         $encuesta = new Encuesta();
@@ -47,24 +44,10 @@ class EncuestaController extends Controller
         return view('encuesta.create', compact('encuesta','lineas','dimensiones','subdimensiones','preguntas','alternativas','cabeceras','cabeceras_alternativas'));
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(EncuestaRequest $request): RedirectResponse
     {
+        dd($request);
         Encuesta::create($request->validated());
-
-        dd($request->toArray());
-
-        // Crear la nueva encuesta
-        $encuesta = new Encuesta();
-        $encuesta->id_linea = $validated['id_linea'];
-        $encuesta->nombre = $validated['nombre'];
-        $encuesta->descripcion = $validated['descripcion'] ?? '';
-        $encuesta->estado = true;
-
-        $encuesta->save();
-
         $lastid = Encuesta::latest()->first()->id;
 
         return Redirect::route('encuesta.edit', $lastid)
@@ -77,7 +60,6 @@ class EncuestaController extends Controller
     public function show($id): View
     {
         $encuesta = Encuesta::find($id);
-
         return view('encuesta.show', compact('encuesta'));
     }
 

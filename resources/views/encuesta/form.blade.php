@@ -9,10 +9,6 @@
         </div>
         <div class="form-group mb-2 mb20">
             <label for="descripcion" class="form-label">{{ __('Descripcion') }}</label>
-            <!--
-            <input type="text" name="descripcion" class="form-control @error('descripcion') is-invalid @enderror"
-                value="{{ old('descripcion', $encuesta?->descripcion) }}" id="descripcion" placeholder="Descripcion">
-            -->
             <textarea name="descripcion"  class="form-control @error('descripcion') is-invalid @enderror" id="descripcion" placeholder="Descripcion">
                 {{ old('descripcion', $encuesta?->descripcion) }}
             </textarea>
@@ -26,12 +22,11 @@
                 @endif
                 @foreach ($lineas as $linea)
                     @if($encuesta->id_linea == $linea->id)
-                    <option value="{{ $linea->id }}" selected>{{ $linea->nombre }}</option>
+                        <option value="{{ $linea->id }}" selected>{{ $linea->nombre }}</option>
                     @else
-                    <option value="{{ $linea->id }}">{{ $linea->nombre }}</option>
+                        <option value="{{ $linea->id }}">{{ $linea->nombre }}</option>
                     @endif
                 @endforeach
-                
             </select>
         </div>
         <div class="form-group mb-2 mb20">
