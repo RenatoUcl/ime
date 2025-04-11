@@ -39,10 +39,6 @@
                         </select>
                     </div>
                     <div class="col-12">
-                        <label for="preguntax">Pregunta</label>
-                        <textarea name="preguntax" id="preguntax" cols="30" rows="10" placeholder="Ingrese la Pregunta" class="form-control"></textarea>
-                    </div>
-                    <div class="col-12">
                         <label for="posicion">Posición</label>
                         <select name="posicion" id="posicion" class="form-control">
                             <option value="0" selected>Seleccione</option>
@@ -51,6 +47,10 @@
                             <option value="3">3</option>
                             <option value="4">4</option>
                         </select>
+                    </div>
+                    <div class="col-12">
+                        <label for="preguntax">Pregunta</label>
+                        <textarea name="preguntax" id="preguntax" cols="30" rows="10" placeholder="Ingrese la Pregunta" class="form-control"></textarea>
                     </div>
                 </div>
             </div>

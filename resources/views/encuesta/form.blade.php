@@ -320,7 +320,7 @@
                                     <th scope="row">{{ $cabeza->id }}</th>
                                     <td>{{ $cabeza->id_encuesta }}</td>
                                     <td>{{ $cabeza->tipo }}</td>
-                                    <td>{{ $cabeza->pregunta }}</td>
+                                    <td>{!! $cabeza->pregunta !!}</td>
                                     <td>
                                         <button class="btn btn-sm btn-success" data-toggle="modal" data-target="#ModalA{{ $cabeza->id }}" title="Agregar Alternativa"><i class="fas fa-plus-square"></i></button>
                                         <button class="btn btn-sm btn-warning" title="Editar Pregunta"><i class="fas fa-edit"></i></button>
@@ -387,6 +387,7 @@
                 e.preventDefault();
                 ul_lista.removeChild(li);
             });
+            document.querySelector("#input_nombre").val() = "";
         }
     }
     btn_agregar.addEventListener("click", agregarItem);

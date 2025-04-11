@@ -38,14 +38,14 @@
                                         <tr>
                                             <td>{{ $encuesta->id }}</td>
                                             <td>{{ $encuesta->nombre }}</td>
-                                            <td>{{ $encuesta->descripcion }}</td>
+                                            <td>{!! $encuesta->descripcion !!}</td>
                                             <td>{{ $encuesta->created_at->format('d/m/Y') }}</td>
                                             @if ($encuesta->estado == true)
                                                 <td>
                                                     <span class="btn btn-sm btn-success">Activo</span>
                                                 </td>
                                                 <td>
-                                                    <a class="btn btn-sm btn-primary" href="{{ route('encuesta.responder', $encuesta->id) }}"><i class="fa fa-fw fa-eye"></i> Responder</a>
+                                                    <a class="btn btn-sm btn-primary" href="{{ route('encuesta.iniciar', $encuesta->id) }}"><i class="fa fa-fw fa-eye"></i> Responder</a>
                                                 </td>
                                             @else
                                                 <td><span class="btn btn-sm btn-warning">Inactivo</span></td>

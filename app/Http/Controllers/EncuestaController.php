@@ -55,7 +55,7 @@ class EncuestaController extends Controller
     {
         $encuesta = Encuesta::find($id);
         $lineas = LineasProgramaticas::all();
-        $dimensiones = Dimension::all();
+        $dimensiones = Dimension::where('id_linea',$encuesta->id_linea)->get();
         $subdimensiones = Subdimension::all();
         $preguntas = Pregunta::select(
             'preguntas.id',
