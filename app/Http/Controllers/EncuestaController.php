@@ -54,10 +54,11 @@ class EncuestaController extends Controller
     public function edit($id): View
     {
         $encuesta = Encuesta::find($id);
-        $lineas = LineasProgramaticas::with('dimensiones.subdimensiones')->find($encuesta->id_linea);
+        $lineas = LineasProgramaticas::with('dimensiones.subdimensiones')->where('id',$encuesta->id_linea)->get();
         $dimensiones = Dimension::where('id_linea', $encuesta->id_linea)->with('subdimensiones')->get();
-        
-        dd(collect($dimensiones[0]->subdimensiones));
+        $subdimensiones = $dimensiones->flatMap(function ($dimension) {
+            return $dimension->subdimensiones;
+        })->values()->all();
 
         $preguntas = Pregunta::select(
             'preguntas.id',
@@ -187,43 +188,4 @@ class EncuestaController extends Controller
         return Redirect::route('encuesta.index')
             ->with('success', 'Encuesta deleted successfully');
     }
-
-    // Inicia la encuesta uno a uno
-
-    public function iniciar($id)
-    {
-        $encuesta = Encuesta::findOrFail($id);
-        $pregunta = $encuesta->preguntas()->orderBy('posicion')->first();
-    
-        return view('encuesta.responder', compact('encuesta', 'pregunta'));
-    }
-    
-    public function responder(Request $request)
-    {
-        // Guardar la respuesta actual
-        Respuesta::create([
-            'id_pregunta' => $request->id_pregunta,
-            'id_alternativa' => $request->id_alternativa,
-            'texto' => $request->texto,
-            'valor' => $request->valor ?? 0,
-            'nivel' => $request->nivel ?? 0,
-        ]);
-    
-        // Buscar la siguiente pregunta
-        $preguntaActual = Pregunta::find($request->id_pregunta);
-        $preguntaSiguiente = Pregunta::where('id_encuesta', $preguntaActual->id_encuesta)
-            ->where('posicion', '>', $preguntaActual->posicion)
-            ->orderBy('posicion')
-            ->first();
-    
-        if ($preguntaSiguiente) {
-            return response()->json([
-                'success' => true,
-                'html' => view('encuesta.pregunta', ['pregunta' => $preguntaSiguiente])->render()
-            ]);
-        } else {
-            return response()->json(['success' => true, 'terminado' => true]);
-        }
-    }
-    
 }

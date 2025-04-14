@@ -63,12 +63,12 @@ class Encuesta extends Model
      */
     public function preguntas()
     {
-        return $this->hasMany(\App\Models\Pregunta::class, 'id', 'id_encuesta');
+        return $this->hasMany(\App\Models\Pregunta::class, 'id_encuesta');
     }
 
     public function linea()
     {
-        return $this->belongsTo(LineaProgramatica::class, 'id_linea');
+        return $this->belongsTo(LineasProgramaticas::class, 'id_linea');
     }
     
 }

@@ -57,7 +57,7 @@ class Pregunta extends Model
      */
     public function alternativas()
     {
-        return $this->hasMany(\App\Models\Alternativa::class, 'id', 'id_pregunta');
+        return $this->hasMany(\App\Models\Alternativa::class, 'id_pregunta');
     }
     
     /**

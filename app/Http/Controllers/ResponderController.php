@@ -126,12 +126,43 @@ class ResponderController extends Controller
             ->with('success', 'Respuesta created successfully.');
     }
 
-    /*
-    public function create(): View
-    {
-        $respuesta = new Respuesta();
-
-        return view('respuesta.create', compact('respuesta'));
-    }
+    /**
+     *
+     *  INICIO EL RESPONDER ENCUESTA 
+     * 
     */
+    public function iniciar(Encuesta $encuesta)
+    {
+        $pregunta = $encuesta->preguntas()->orderBy('posicion')->first();
+        if (!$pregunta) {
+            return redirect()->route('home')->with('error', 'No hay preguntas para esta encuesta');
+        }
+        return view('responder.responder', compact('encuesta', 'pregunta'));
+    }
+
+    public function responder(Request $request, Encuesta $encuesta, Pregunta $pregunta)
+    {
+        // Validar y guardar
+        $respuesta = new Respuesta();
+        $respuesta->id_pregunta = $pregunta->id;
+        $respuesta->id_alternativa = $request->input('alternativa_id');
+        $respuesta->valor = $request->input('valor', 0); // opcional
+        $respuesta->texto = $request->input('texto', '');
+        $respuesta->nivel = 1; // puedes personalizar esto
+        $respuesta->save();
+
+        // Obtener la siguiente pregunta
+        $siguiente = $encuesta->preguntas()
+            ->where('posicion', '>', $pregunta->posicion)
+            ->orderBy('posicion')
+            ->first();
+
+        if ($siguiente) {
+            return redirect()->route('responder.iniciar', $encuesta->id)
+                             ->with('pregunta_id', $siguiente->id);
+        }
+
+        return redirect()->route('home')->with('success', 'Encuesta completada');
+    }
+
 }

@@ -181,8 +181,6 @@ Route::middleware("auth")->group(function (){
         Route::get('/encuesta/edit/{id}', 'edit')->name('encuesta.edit');
         Route::put('/encuesta/update/{id}', 'update')->name('encuesta.update');
         Route::put('/encuesta/disabled/{id}', 'disabled')->name('encuesta.disabled');
-        Route::get('/encuesta/{id}/iniciar', 'iniciar')->name('encuesta.iniciar');
-        Route::post('/encuesta/responder', 'responder')->name('encuesta.responder');
         //Route::delete('/encuestas/destroy/{id}', 'destroy')->name('encuestas.destroy');
     });
 
@@ -262,6 +260,9 @@ Route::middleware("auth")->group(function (){
         Route::get('/responder','index')->name('responder.index');
         Route::get('/responder/show/{id}', 'show')->name('responder.show');
         Route::post('/responder/save', 'save')->name('responder.save');
+
+        Route::get('/responder/{encuesta}', 'iniciar')->name('responder.iniciar');
+        Route::post('/responder/{encuesta}/{pregunta}', 'responder')->name('responder.responder');
     });
 
     /*
