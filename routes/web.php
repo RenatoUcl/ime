@@ -258,11 +258,9 @@ Route::middleware("auth")->group(function (){
 
     Route::controller(ResponderController::class)->group(function(){
         Route::get('/responder','index')->name('responder.index');
-        Route::get('/responder/show/{id}', 'show')->name('responder.show');
-        Route::post('/responder/save', 'save')->name('responder.save');
+        Route::get('/responder/{id}', 'mostrar')->name('responder.mostrar');
+        Route::post('/responder/guardar', 'guardar')->name('responder.guardar');
 
-        Route::get('/responder/{encuesta}', 'iniciar')->name('responder.iniciar');
-        Route::post('/responder/{encuesta}/{pregunta}', 'responder')->name('responder.responder');
     });
 
     /*

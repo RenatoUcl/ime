@@ -13,6 +13,7 @@ return new class extends Migration
             $table->foreignId('id_pregunta')
                 ->references('id')
                 ->on('preguntas');
+            $table->bigint('id_dependencia');
             $table->text('texto');
             $table->integer('valor');
             $table->timestamps();

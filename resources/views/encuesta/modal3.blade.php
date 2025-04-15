@@ -11,9 +11,10 @@
             <div class="modal-body">
                 <div class="row mt-1">
                     <div class="col-12">
-                        <span>{{ $pregunta->id}} | {{ $pregunta->texto }}</span>
+                        <span>{{ $pregunta->id}} | {!! $pregunta->texto !!}</span>
                     </div>
                 </div>                
+                @if ($pregunta->tipo == 1)
                 <div class="row mt-1">
                     <div class="col-12">
                         <label for="adepende">Seleccione Dependencia</label>
@@ -28,7 +29,9 @@
                         </select>
                     </div>
                 </div>
-
+                @else
+                <input type="hidden" name="adepende[{{ $pregunta->id }}]" id="adepende[{{ $pregunta->id }}]" value="0" />
+                @endif
                 <div class="row mt-1">
                     <div class="col-12">
                         <label for="alternativa">Alternativa</label>

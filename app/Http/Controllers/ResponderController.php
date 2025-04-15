@@ -35,7 +35,7 @@ class ResponderController extends Controller
         foreach($respondido as $item){
             $excluir[] = $item->id_encuesta;
         }
-        $encuestas = Encuesta::all()->whereNotIn('id','21');
+        $encuestas = Encuesta::all();
         return view('responder.index', compact('encuestas','respondido'));
             //->with('i', ($request->input('page', 1) - 1) * $encuestas->perPage());
     }
@@ -131,38 +131,60 @@ class ResponderController extends Controller
      *  INICIO EL RESPONDER ENCUESTA 
      * 
     */
-    public function iniciar(Encuesta $encuesta)
+
+    public function mostrar($id)
     {
-        $pregunta = $encuesta->preguntas()->orderBy('posicion')->first();
-        if (!$pregunta) {
-            return redirect()->route('home')->with('error', 'No hay preguntas para esta encuesta');
-        }
-        return view('responder.responder', compact('encuesta', 'pregunta'));
+        $encuesta = Encuesta::findOrFail($id);
+        
+        // Traer la primera pregunta según su posición
+        $pregunta = Pregunta::where('id_encuesta', $id)
+            ->orderBy('posicion', 'asc')
+            ->with('alternativas') // Asumimos que la relación está definida
+            ->first();
+
+        return view('responder.mostrar', compact('encuesta', 'pregunta'));
     }
 
-    public function responder(Request $request, Encuesta $encuesta, Pregunta $pregunta)
+    public function guardar(Request $request)
     {
-        // Validar y guardar
+
+        // Validación de datos
+        $validated = $request->validate([
+            'id_pregunta' => 'required|exists:preguntas,id',
+            'id_alternativa' => 'required|exists:alternativas,id',
+            'id_encuesta' => 'required|exists:encuestas,id',
+        ]);
+        // Guardar la respuesta
         $respuesta = new Respuesta();
-        $respuesta->id_pregunta = $pregunta->id;
-        $respuesta->id_alternativa = $request->input('alternativa_id');
-        $respuesta->valor = $request->input('valor', 0); // opcional
-        $respuesta->texto = $request->input('texto', '');
-        $respuesta->nivel = 1; // puedes personalizar esto
+        $respuesta->id_pregunta = $validated['id_pregunta'];
+        $respuesta->id_alternativa = $validated['id_alternativa'];
+        $respuesta->id_encuesta = $validated['id_encuesta'];
+        $respuesta->valor = null;  // Aquí deberías asignar el valor si lo tienes
+        $respuesta->nivel = 1;     // Asume un valor predeterminado para el nivel
         $respuesta->save();
 
         // Obtener la siguiente pregunta
-        $siguiente = $encuesta->preguntas()
-            ->where('posicion', '>', $pregunta->posicion)
+        $siguientePregunta = Pregunta::where('id_encuesta', $validated['id_encuesta'])
+            ->where('posicion', '>', $request->input('posicion', 0))  // Asegura que la pregunta sea siguiente
             ->orderBy('posicion')
             ->first();
 
-        if ($siguiente) {
-            return redirect()->route('responder.iniciar', $encuesta->id)
-                             ->with('pregunta_id', $siguiente->id);
+        // Verificar si hay una pregunta siguiente
+        if ($siguientePregunta) {
+            // Retornar la URL para la siguiente pregunta
+            return response()->json([
+                'siguiente_url' => route('responder.mostrar', $siguientePregunta->id)
+            ]);
         }
 
-        return redirect()->route('home')->with('success', 'Encuesta completada');
+        // Si no hay más preguntas, retornar una URL a donde desees (por ejemplo, resumen de la encuesta)
+        return response()->json([
+            'siguiente_url' => route('responder.finalizar', $validated['id_encuesta'])
+        ]);
     }
 
+    /**
+     * FIN
+     * 
+     */
 }

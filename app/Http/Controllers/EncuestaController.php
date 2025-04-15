@@ -188,4 +188,6 @@ class EncuestaController extends Controller
         return Redirect::route('encuesta.index')
             ->with('success', 'Encuesta deleted successfully');
     }
+
+   
 }
