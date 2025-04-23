@@ -16,7 +16,6 @@ return new class extends Migration
             $table->foreignId('id_alternativa')
                 ->references('id')
                 ->on('alternativas');
-            $table->text('texto');
             $table->integer('valor');
             $table->integer('nivel');
             $table->timestamps();

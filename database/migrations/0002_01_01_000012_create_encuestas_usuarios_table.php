@@ -18,6 +18,8 @@ return new class extends Migration
                 ->references('id')
                 ->on('users')
                 ->unique();
+            $table->unsignedBigInteger('ultima_pregunta_id')->nullable();
+            $table->boolean('completado')->default(false);    
             $table->timestamps();
         });
     }
