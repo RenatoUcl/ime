@@ -17,61 +17,38 @@ use Illuminate\View\View;
 
 class AlternativaController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index(Request $request): View
     {
         $alternativas = Alternativa::paginate();
-
         return view('alternativa.index', compact('alternativas'))
             ->with('i', ($request->input('page', 1) - 1) * $alternativas->perPage());
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
     public function create(): View
     {
         $alternativa = new Alternativa();
-
         return view('alternativa.create', compact('alternativa'));
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(AlternativaRequest $request): RedirectResponse
     {
         Alternativa::create($request->validated());
-
         return Redirect::route('alternativas.index')
             ->with('success', 'Alternativa created successfully.');
     }
 
-    /**
-     * Display the specified resource.
-     */
     public function show($id): View
     {
         $alternativa = Alternativa::find($id);
-
         return view('alternativa.show', compact('alternativa'));
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
     public function edit($id): View
     {
         $alternativa = Alternativa::find($id);
-
         return view('alternativa.edit', compact('alternativa'));
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
     public function update(AlternativaRequest $request,Alternativa $alternativa): RedirectResponse
     {
         $alternativa->update($request->validated());

@@ -128,9 +128,7 @@ class ResponderController extends Controller
     }
 
     /**
-     *
-     *  INICIO EL RESPONDER ENCUESTA 
-     * 
+     *  INICIO EL RESPONDER ENCUESTA
     */
 
     public function mostrar($idEncuesta, $index = 0)
@@ -151,8 +149,18 @@ class ResponderController extends Controller
 
         $preguntas = Pregunta::where('id_encuesta', $idEncuesta)
             ->with('alternativas')
-            ->orderBy('posicion') // o 'id', si no usas posición
+            ->orderBy('id_subdimension','asc')
+            ->orderBy('posicion','asc') // o 'id', si no usas posición
             ->get();
+
+        // Obtener las respuestas que ha dado el usuario a esta encuesta
+        $preguntasRespondidas = Respuesta::whereIn('id_pregunta', $preguntas->pluck('id'))
+            ->where('nivel', $usuario)
+            ->pluck('id_pregunta')
+            ->toArray();
+        $index=count($preguntasRespondidas);
+
+        $totalPreguntas = count($preguntas);
     
         // Si no hay más preguntas, redirigimos
         if (!isset($preguntas[$index])) {
@@ -161,7 +169,7 @@ class ResponderController extends Controller
     
         $pregunta = $preguntas[$index];
     
-        return view('responder.mostrar', compact('encuesta', 'pregunta', 'index'));
+        return view('responder.mostrar', compact('encuesta', 'pregunta', 'index','totalPreguntas'));
     }
     
 
@@ -184,43 +192,7 @@ class ResponderController extends Controller
             ])
         ]);
     }
-
-    public function continuar($id)
-    {
-        $encuesta = Encuesta::findOrFail($id);
-
-        // Obtener el usuario actual
-        $usuarioId = auth()->id();
-
-        // Obtener todas las preguntas de la encuesta ordenadas
-        $preguntas = Pregunta::where('id_encuesta', $id)->orderBy('posicion')->get();
-
-        // Obtener las respuestas que ha dado el usuario a esta encuesta
-        $preguntasRespondidas = Respuesta::whereIn('id_pregunta', $preguntas->pluck('id'))
-            ->where('nivel', $usuarioId)
-            ->pluck('id_pregunta')
-            ->toArray();
-
-        // Buscar la primera pregunta que no esté respondida
-        $preguntaPendiente = $preguntas->first(function ($pregunta) use ($preguntasRespondidas) {
-            return !in_array($pregunta->id, $preguntasRespondidas);
-        });
-
-        // Si ya respondió todas las preguntas
-        if (!$preguntaPendiente) {
-            return redirect()->route('responder.index')->with('success', 'Ya has respondido esta encuesta.');
-        }
-
-        // Cargar las alternativas para la pregunta pendiente
-        $preguntaPendiente->load('alternativas');
-
-        return view('responder.mostrar', compact('encuesta', 'preguntaPendiente'));
-    }
-
-
-
     /**
      * FIN
-     * 
      */
 }
