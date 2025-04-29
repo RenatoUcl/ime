@@ -6,7 +6,7 @@
                 <div class="card card-primary">
                     <div class="card-header">
                         <div style="display: flex; justify-content: space-between; align-items: center;">
-                            <span class="card-title">{{ $encuesta->nombre }} | Pregunta: {{ $pregunta->id }}</span>
+                            <span class="card-title">{{ $encuesta->nombre }} | Pregunta: {{ $index+1 }} de {{ $totalPreguntas }}</span>
                             <div class="float-right">
                                 <a class="btn btn-info btn-sm" href="{{ route('responder.index') }}"><i class="fas fa-arrow-left"></i>&nbsp;&nbsp;&nbsp; Volver</a>
                             </div>

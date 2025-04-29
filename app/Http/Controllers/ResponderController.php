@@ -159,6 +159,15 @@ class ResponderController extends Controller
             ->pluck('id_pregunta')
             ->toArray();
         $index=count($preguntasRespondidas);
+ 
+        if($preguntas[$index]->posicion==4){
+            $depende = $preguntas[$index]->id_dependencia;
+            foreach($preguntas[$index]->alternativas as $alter){
+                dd($depende);
+
+
+            }
+        }
 
         $totalPreguntas = count($preguntas);
     
