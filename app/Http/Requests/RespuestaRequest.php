@@ -24,6 +24,7 @@ class RespuestaRequest extends FormRequest
         return [
 			'id_pregunta' => 'required',
 			'id_alternativa' => 'required',
+            'id_usuario' => 'required',
 			'texto' => 'required|string',
 			'valor' => 'required',
 			'nivel' => 'required',

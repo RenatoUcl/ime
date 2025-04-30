@@ -153,42 +153,59 @@ class ResponderController extends Controller
             ->orderBy('posicion','asc') // o 'id', si no usas posición
             ->get();
 
+        $totalPreguntas = count($preguntas);
+
         // Obtener las respuestas que ha dado el usuario a esta encuesta
         $preguntasRespondidas = Respuesta::whereIn('id_pregunta', $preguntas->pluck('id'))
-            ->where('nivel', $usuario)
+            ->where('id_usuario', $usuario)
             ->pluck('id_pregunta')
             ->toArray();
         $index=count($preguntasRespondidas);
  
         if($preguntas[$index]->posicion==4){
             $depende = $preguntas[$index]->id_dependencia;
-            foreach($preguntas[$index]->alternativas as $alter){
-                dd($depende);
-
-
+            $pregAct = $preguntas[$index]->id;
+            $pregAnt = $preguntas[$index-1]->id;
+            $respAnt = Respuesta::where('id_pregunta',$pregAnt)->where('id_usuario', $usuario)->pluck('id_alternativa');
+            $alter = Alternativa::where('id_pregunta',$pregAct)->where('id_dependencia', $respAnt)->get();                
+            if (!$alter){
+                $preguntas[$index]->texto = $alter[0]->texto;
+                $preguntas[$index]->alternativas[0]->texto = "Si";
+                $preguntas[$index]->alternativas[0]->valor = 1;
+                $preguntas[$index]->alternativas[0]->id = $alter[0]->id;
+                $preguntas[$index]->alternativas[1]->texto = "No";
+                $preguntas[$index]->alternativas[1]->valor = 0;
+                $preguntas[$index]->alternativas[1]->id = $alter[0]->id;
+            } else {
+                Respuesta::create([
+                    'id_pregunta' => $pregAct,
+                    'id_alternativa' => 0,
+                    'id_usuario' => $usuario,
+                    'valor' => 0,
+                    'nivel' => 0
+                ]);
+                $index = $index + 1;
             }
         }
-
-        $totalPreguntas = count($preguntas);
-    
         // Si no hay más preguntas, redirigimos
         if (!isset($preguntas[$index])) {
             return redirect()->route('responder.index')->with('success', 'Gracias por responder la encuesta.');
         }
-    
         $pregunta = $preguntas[$index];
-    
-        return view('responder.mostrar', compact('encuesta', 'pregunta', 'index','totalPreguntas'));
+        return view('responder.mostrar', compact('encuesta', 'pregunta', 'index', 'totalPreguntas'));
     }
     
 
     public function guardar(Request $request)
     {
+        $usuario = Auth::user()->id;
+
         Respuesta::create([
             'id_pregunta' => $request->id_pregunta,
             'id_alternativa' => $request->id_alternativa,
+            'id_usuario' => $usuario,
             'valor' => $request->valor,
-            'nivel' => 1
+            'nivel' => 0
         ]);
 
         // Aumentar el índice y redirigir
@@ -201,6 +218,7 @@ class ResponderController extends Controller
             ])
         ]);
     }
+
     /**
      * FIN
      */
