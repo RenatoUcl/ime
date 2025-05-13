@@ -11,6 +11,9 @@
                                 <a class="btn btn-info btn-sm" href="{{ route('responder.index') }}"><i class="fas fa-arrow-left"></i>&nbsp;&nbsp;&nbsp; Volver</a>
                             </div>
                         </div>
+                        <div>
+                            Dimensión: {{ $pregunta->dimension }} | Subdimensión: {{ $pregunta->subdimension }}
+                        </div>
                     </div>
                     <div class="card-body bg-white">
                         <h2>{!! $pregunta->texto !!}</h2>
@@ -32,6 +35,7 @@
                                     </div>
                                 @endforeach
                                 <input type="hidden" name="valor" id="valor">
+                                <input type="hidden" name="nivel" id="nivel" value="{{ $pregunta->id_subdimension }}" />
                                 <button type="submit" class="btn btn-primary mt-3">Siguiente</button>
                             </form>
                         </div>
