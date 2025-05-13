@@ -189,5 +189,11 @@ class EncuestaController extends Controller
             ->with('success', 'Encuesta deleted successfully');
     }
 
+    public function delAleternativa($id): RedirectResponse
+    {
+        Alternativa::find($id)->delete();
+        return Redirect::route('encuesta.index')
+            ->with('success', 'Alternativa eliminada satisfactoriamente');
+    }
    
 }

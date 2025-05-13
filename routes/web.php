@@ -263,6 +263,10 @@ Route::middleware("auth")->group(function (){
         Route::get('/responder/{id}/continuar','continuar')->name('responder.continuar');
     });
 
+    Route::controller(IndiceMultiController::class)->group(function(){
+        Route::get('/indice','index')->name('indice.index');
+        Route::get('/indice/show/{id}', 'show')->name('indice.show');
+    });
     /*
     // BASE
     Route::controller(Controller::class)->group(function(){

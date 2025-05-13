@@ -163,6 +163,10 @@ class ResponderController extends Controller
             ->pluck('id_pregunta')
             ->toArray();
         $index=count($preguntasRespondidas);
+
+        if ($index==$totalPreguntas){
+            return redirect()->route('responder.index')->with('success', 'La encuesta ya fue contestada');
+        }
  
         if($preguntas[$index]->id_dependencia!=0){
             $depende = $preguntas[$index]->id_dependencia;

@@ -59,10 +59,12 @@ class AlternativaController extends Controller
     public function disabled($id): RedirectResponse
     {
         $item = Alternativa::find($id);
+
         $id_preg = $item->id_pregunta;
+
         $pregunta = Pregunta::find($id_preg);
         $id_encuesta = $pregunta->id_encuesta;
-        
+
         $respuesta = Respuesta::where('id_pregunta',$id_preg)->get();
         $count = $respuesta->count();
 
@@ -70,8 +72,10 @@ class AlternativaController extends Controller
             return Redirect::route('encuesta.edit',$id_encuesta)
             ->with('warning', 'La Alternativa no puede ser eliminada, por que contienen respuestas asociadas.');
         } else {
+            Alternativa::find($id)->delete();
+
             return Redirect::route('encuesta.edit',$id_encuesta)
-            ->with('success', 'Encuesta desactivado satisfactoriamente');
+            ->with('success', 'Alternativa eliminada satisfactoriamente');
         }
     }
 
