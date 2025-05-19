@@ -59,12 +59,9 @@ class AlternativaController extends Controller
     public function disabled($id): RedirectResponse
     {
         $item = Alternativa::find($id);
-
         $id_preg = $item->id_pregunta;
-
         $pregunta = Pregunta::find($id_preg);
         $id_encuesta = $pregunta->id_encuesta;
-
         $respuesta = Respuesta::where('id_pregunta',$id_preg)->get();
         $count = $respuesta->count();
 

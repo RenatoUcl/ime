@@ -13,7 +13,20 @@ class SubdimensionController extends Controller
 {
     public function index(Request $request): View
     {
-        $subdimensiones = Subdimension::paginate();
+        //$subdimensiones = Subdimension::paginate();
+        $subdimensiones = Subdimension::select(
+            'subdimensiones.id',
+            'subdimensiones.id_dimension',
+            'dimensiones.nombre as dimension',
+            'subdimensiones.nombre',
+            'subdimensiones.descripcion',
+            'subdimensiones.posicion',
+            'subdimensiones.estado',
+            'subdimensiones.created_at',
+            'subdimensiones.updated_at'
+            )
+            ->leftJoin('dimensiones', 'dimensiones.id', '=', 'subdimensiones.id_dimension')
+            ->paginate();
 
         return view('subdimension.index', compact('subdimensiones'))
             ->with('i', ($request->input('page', 1) - 1) * $subdimensiones->perPage());

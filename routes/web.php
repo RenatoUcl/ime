@@ -20,6 +20,8 @@ use App\Http\Controllers\PreguntaController;
 use App\Http\Controllers\RespuestaController;
 use App\Http\Controllers\AlternativaController;
 use App\Http\Controllers\ResponderController;
+use App\Http\Controllers\IndiceMultiController;
+
 use Illuminate\Support\Facades\Route;
 
 Route::middleware("guest")->group(function (){

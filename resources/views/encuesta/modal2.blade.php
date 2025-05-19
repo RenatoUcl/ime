@@ -15,7 +15,7 @@
                         <select name="id_subdimension" class="form-control">
                             <option value="0">Seleccione una Subdimensión</option>
                             @foreach ($subdimensiones as $subdimension)
-                                <option value="{{ $subdimension->id }}">{{ $subdimension->nombre }}</option>
+                                <option value="{{ $subdimension->id }}">{{ $subdimension->posicion}} | {{ $subdimension->nombre }}</option>
                             @endforeach
                         </select>
                     </div>
@@ -23,8 +23,8 @@
                         <label for="tipo">Tipo Pregunta</label>
                         <select name="tipo" id="tipo" class="form-control" onchange="activa_dependencia()"> 
                             <option value="0">Seleccione tipo de Pregunta</option>
-                            <option value="1">Con dependencia</option>
                             <option value="2">Sin dependencia</option>
+                            <option value="1">Con dependencia</option>
                         </select>
                     </div>
                     <div class="col-12" id="depende" style="display: none;">
@@ -33,7 +33,7 @@
                             <option value="0" selected>Seleccione</option>
                             @if ($preguntas)
                                 @foreach ($preguntas as $dpnd)
-                                    <option value="{{ $dpnd->id }}">{{ $dpnd->id }} | {{ $dpnd->texto }}</option>
+                                        <option value="{{ $dpnd->id }}">{{ $dpnd->id }} | {{ $dpnd->id_subdimension}} | {{ $dpnd->texto }}</option>
                                 @endforeach
                             @endif
                         </select>

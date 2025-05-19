@@ -24,28 +24,30 @@
                                 <thead class="thead">
                                     <tr>
                                         <th>No</th>
-                                        <th>Id Dimension</th>
+                                        <th>Dimension</th>
                                         <th>Nombre</th>
                                         <th>Descripcion</th>
+                                        <th>Posición</th>
                                         <th>Estado</th>
-                                        <th>Acciones</th>
+                                        <th width="250">Acciones</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     @foreach ($subdimensiones as $subdimensione)
                                         <tr>
                                             <td>{{ ++$i }}</td>
-                                            <td>{{ $subdimensione->id_dimension }}</td>
+                                            <td>{{ $subdimensione->dimension }}</td>
                                             <td>{{ $subdimensione->nombre }}</td>
                                             <td>{!! $subdimensione->descripcion !!}</td>
+                                            <td>{{ $subdimensione->posicion }}</td>
                                             <td>{{ $subdimensione->estado }}</td>
                                             <td>
                                                 <form action="{{ route('subdimension.index', $subdimensione->id) }}" method="POST">
-                                                    <a class="btn btn-sm btn-primary " href="{{ route('subdimension.show', $subdimensione->id) }}"><i class="fa fa-fw fa-eye"></i> {{ __('Show') }}</a>
-                                                    <a class="btn btn-sm btn-success" href="{{ route('subdimension.edit', $subdimensione->id) }}"><i class="fa fa-fw fa-edit"></i> {{ __('Edit') }}</a>
+                                                    <a class="btn btn-sm btn-primary " href="{{ route('subdimension.show', $subdimensione->id) }}"><i class="fa fa-fw fa-eye"></i> {{ __('Ver') }}</a>
+                                                    <a class="btn btn-sm btn-success" href="{{ route('subdimension.edit', $subdimensione->id) }}"><i class="fa fa-fw fa-edit"></i> {{ __('Editar') }}</a>
                                                     @csrf
                                                     @method('PUT')
-                                                    <button type="submit" class="btn btn-danger btn-sm" onclick="event.preventDefault(); confirm('Are you sure to delete?') ? this.closest('form').submit() : false;"><i class="fa fa-fw fa-trash"></i> {{ __('Delete') }}</button>
+                                                    <button type="submit" class="btn btn-danger btn-sm" onclick="event.preventDefault(); confirm('Are you sure to delete?') ? this.closest('form').submit() : false;"><i class="fa fa-fw fa-trash"></i> {{ __('Borrar') }}</button>
                                                 </form>
                                             </td>
                                         </tr>

@@ -31,7 +31,7 @@ class Respuesta extends Model
      *
      * @var array<int, string>
      */
-    protected $fillable = ['id_pregunta', 'id_alternativa', 'id_usuario', 'texto', 'valor', 'nivel'];
+    protected $fillable = ['id_encuesta','id_pregunta', 'id_alternativa', 'id_usuario', 'texto', 'valor', 'nivel'];
 
 
     /**

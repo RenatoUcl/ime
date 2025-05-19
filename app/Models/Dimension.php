@@ -26,7 +26,7 @@ class Dimension extends Model
 
     protected $perPage = 20;
 
-    protected $fillable = ['id_linea', 'nombre', 'descripcion', 'estado'];
+    protected $fillable = ['id_linea', 'nombre', 'descripcion', 'posicion', 'estado'];
 
     public function linea()
     {

@@ -112,7 +112,7 @@
                                                                                         @foreach ($preguntas as $pregunta)
                                                                                             @if($pregunta->id_subdimension == $subd->id)
                                                                                                 <tr>
-                                                                                                    <th>{{ $dimension->id}}.{{ $subd->id}}.{{ $pregunta->posicion }}</td>
+                                                                                                    <th>{{ $dimension->posicion}}.{{ $subd->posicion}}.{{ $pregunta->posicion }}</td>
                                                                                                     <td>{{ $pregunta->nombre }}</td>
                                                                                                     <td>{!! $pregunta->texto !!}</td>
                                                                                                     <td>
@@ -223,7 +223,7 @@
                                                                                         @foreach ($preguntas as $pregunta)
                                                                                             @if($pregunta->id_subdimension == $subd->id)
                                                                                                 <tr>
-                                                                                                    <th>{{ $dimension->id}}.{{ $subd->id}}.{{ $pregunta->posicion }}</td>
+                                                                                                    <th>{{ $dimension->posicion}}.{{ $subd->posicion}}.{{ $pregunta->posicion }}</td>
                                                                                                     <td>{{ $pregunta->nombre }}</td>
                                                                                                     <td>{!! $pregunta->texto !!}</td>
                                                                                                     <td>

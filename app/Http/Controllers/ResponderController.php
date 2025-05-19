@@ -209,6 +209,7 @@ class ResponderController extends Controller
     {
         $usuario = Auth::user()->id;
         Respuesta::create([
+            'id_encuesta' => $request->id_encuesta,
             'id_pregunta' => $request->id_pregunta,
             'id_alternativa' => $request->id_alternativa,
             'id_usuario' => $usuario,

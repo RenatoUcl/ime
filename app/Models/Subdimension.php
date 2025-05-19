@@ -26,7 +26,7 @@ class Subdimension extends Model
 
     protected $perPage = 20;
 
-    protected $fillable = ['id_dimension', 'nombre', 'descripcion', 'estado'];
+    protected $fillable = ['id_dimension', 'nombre', 'descripcion', 'posicion', 'estado'];
 
 
     /**

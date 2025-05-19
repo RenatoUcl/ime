@@ -26,19 +26,27 @@
                             <table class="table table-striped table-hover">
                                 <thead class="thead">
                                     <tr>
-                                        <th>No</th>
+                                        <th>ID</th>
                                         <th>Nombre</th>
                                         <th>Descripcion</th>
+                                        <th>Linea Programatica</th>
+                                        <th>Posición</th>
                                         <th>Estado</th>
                                         <th></th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     @foreach ($dimensiones as $item)
+                                        @php
+                                            $idlinea = ($item->id_linea)-1;
+                                            $lineaNombre = $lineas[$idlinea]->nombre;
+                                        @endphp
                                         <tr>
                                             <td>{{ $item->id }}</td>
                                             <td>{{ $item->nombre }}</td>
                                             <td>{!! $item->descripcion !!}</td>
+                                            <td>{{ $lineaNombre }}</td>
+                                            <td>{{ $item->posicion }}</td>
                                             <td>{{ $item->estado }}</td>
                                             <td>
                                                 <form action="{{ route('dimension.index', $item->id) }}" method="POST">

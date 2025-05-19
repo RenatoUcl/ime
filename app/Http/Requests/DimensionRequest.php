@@ -25,6 +25,7 @@ class DimensionRequest extends FormRequest
 			'id_linea' => 'required',
 			'nombre' => 'required|string',
 			'descripcion' => 'required|string',
+            'posicion' => 'required|integer',
 			'estado' => 'required',
         ];
     }

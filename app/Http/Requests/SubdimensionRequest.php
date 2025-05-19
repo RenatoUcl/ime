@@ -25,6 +25,7 @@ class SubdimensionRequest extends FormRequest
 			'id_dimension' => 'required',
 			'nombre' => 'required|string',
 			'descripcion' => 'required|string',
+            'posicion' => 'required|integer',
 			'estado' => 'required',
         ];
     }

@@ -10,6 +10,9 @@ return new class extends Migration
     {
         Schema::create('respuestas', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('id_encuesta')
+                ->references('id')
+                ->on('encuestas');
             $table->foreignId('id_pregunta')
                 ->references('id')
                 ->on('preguntas');

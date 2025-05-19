@@ -15,6 +15,7 @@ return new class extends Migration
                 ->on('lineas_programaticas');
             $table->string('nombre');
             $table->text('descripcion');
+            $table->integer('posicion');
             $table->boolean('estado')->default(true);
             $table->timestamps();
         });

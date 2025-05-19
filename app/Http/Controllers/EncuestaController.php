@@ -74,6 +74,7 @@ class EncuestaController extends Controller
             )
             ->leftjoin('subdimensiones','subdimensiones.id','=','preguntas.id_subdimension')
             ->where('preguntas.id_encuesta', $id)
+            ->orderBy('preguntas.id','ASC')
             ->orderBy('preguntas.posicion','ASC')
             ->get();
         
@@ -187,13 +188,6 @@ class EncuestaController extends Controller
 
         return Redirect::route('encuesta.index')
             ->with('success', 'Encuesta deleted successfully');
-    }
-
-    public function delAleternativa($id): RedirectResponse
-    {
-        Alternativa::find($id)->delete();
-        return Redirect::route('encuesta.index')
-            ->with('success', 'Alternativa eliminada satisfactoriamente');
     }
    
 }

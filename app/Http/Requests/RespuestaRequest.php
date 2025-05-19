@@ -22,6 +22,7 @@ class RespuestaRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'id_encuesta' => 'required',
 			'id_pregunta' => 'required',
 			'id_alternativa' => 'required',
             'id_usuario' => 'required',

@@ -26,14 +26,18 @@ class DimensionesSeeder extends Seeder
         ];
 
         $lineas = LineasProgramaticas::all();
+        
 
         foreach ($lineas as $linea) {
+            $pos = 1;
             foreach ($nombres as $nombre) {
                 Dimension::create([
                     'id_linea' => $linea->id,
                     'nombre' => $nombre,
-                    'descripcion' => "Dimensión $nombre para línea {$linea->nombre}",
+                    'descripcion' => "$nombre para línea {$linea->nombre}",
+                    'posicion' => $pos,
                 ]);
+                $pos++;
             }
         }
     }

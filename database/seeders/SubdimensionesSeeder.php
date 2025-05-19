@@ -61,19 +61,21 @@ class SubdimensionesSeeder extends Seeder
         $lineas = LineasProgramaticas::all();
 
         foreach ($lineas as $linea) {
+            $pos=1;
             foreach ($data as $dimensionNombre => $subdimensiones) {
                 $dimension = Dimension::where('nombre', $dimensionNombre)
                     ->where('id_linea', $linea->id)
                     ->first();
-
+                
                 if ($dimension) {
                     foreach ($subdimensiones as $sub) {
                         Subdimension::create([
-                            //'id_linea' => $linea->id,
                             'id_dimension' => $dimension->id,
                             'nombre' => $sub,
                             'descripcion' => "Subdimensión $sub para la dimensión $dimensionNombre en línea {$linea->nombre}",
+                            'posicion' => $pos,
                         ]);
+                    $pos++;
                     }
                 }
             }

@@ -313,23 +313,23 @@ return [
         // Sidebar items:
         [
             'text' => 'Inicio',
-            'url' => 'home',
+            'url'  => 'home',
             'icon' => 'fas fa-fw fa-home',
         ],
         [
-            'text' => 'Crear Encuestas',
-            'icon' => 'fas fa-fw fa-file',
+            'text'  => 'Crear Encuestas',
+            'icon'  => 'fas fa-fw fa-file',
             'route' => 'encuesta.index',
         ],
         [
-            'text' => 'Responder Encuestas',
-            'icon' => 'fas fa-fw fa-file',
+            'text'  => 'Responder Encuestas',
+            'icon'  => 'fas fa-fw fa-file',
             'route' => 'responder.index',
         ],
         [
-            'text' => 'Indice Multidimensional',
-            'url' => '#',
-            'icon' => 'fas fa-fw fa-star',
+            'text'  => 'Indice Multidimensional',
+            'icon'  => 'fas fa-fw fa-star',
+            'route' => 'indice.index',
         ],
         [
             'text' => 'Herramientas',

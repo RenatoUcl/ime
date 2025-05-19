@@ -19,6 +19,11 @@
             {!! $errors->first('descripcion', '<div class="invalid-feedback" role="alert"><strong>:message</strong></div>') !!}
         </div>
         <div class="form-group mb-2 mb20">
+            <label for="posicion" class="form-label">Posición</label>
+            <input type="text" name="posicion" class="form-control @error('posicion') is-invalid @enderror" value="{{ old('posicion', $subdimension?->posicion) }}" id="estado" placeholder="Estado">
+            {!! $errors->first('posicion', '<div class="invalid-feedback" role="alert"><strong>:message</strong></div>') !!}
+        </div>
+        <div class="form-group mb-2 mb20">
             <label for="estado" class="form-label">{{ __('Estado') }}</label>
             <input type="text" name="estado" class="form-control @error('estado') is-invalid @enderror" value="{{ old('estado', $subdimension?->estado) }}" id="estado" placeholder="Estado">
             {!! $errors->first('estado', '<div class="invalid-feedback" role="alert"><strong>:message</strong></div>') !!}

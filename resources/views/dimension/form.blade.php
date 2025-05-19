@@ -6,6 +6,11 @@
             {!! $errors->first('nombre', '<div class="invalid-feedback" role="alert"><strong>:message</strong></div>') !!}
         </div>
         <div class="form-group mb-2 mb20">
+            <label for="posicion">Posición</label>
+            <input type="number" class="form-control" name="posicion" id="posicion" value="{{ old('posicion', $dimension?->posicion) }}">
+            {!! $errors->first('posicion', '<div class="invalid-feedback" role="alert"><strong>:message</strong></div>') !!}
+        </div>
+        <div class="form-group mb-2 mb20">
             <label for="descripcion" class="form-label">Descripcion</label>
             <textarea id="summernote" name="descripcion" class="form-control @error('descripcion') is-invalid @enderror">
                 {{ old('descripcion', $dimension?->descripcion) }}
