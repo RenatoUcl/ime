@@ -223,10 +223,9 @@ class EncuestaController extends Controller
                     'created_at' => now(),
                     'updated_at' => now(),
                 ]);
-
                 $mapPreguntas[$pregunta->id] = $nuevaPreguntaId;
             }
-
+            /*
             // Actualizar dependencias de preguntas
             foreach ($preguntas as $pregunta) {
                 if ($pregunta->id_dependencia && isset($mapPreguntas[$pregunta->id_dependencia])) {
@@ -290,13 +289,16 @@ class EncuestaController extends Controller
                     'updated_at' => now(),
                 ]);
             }
-
+            */
             DB::commit();
-
+/*
             return response()->json([
                 'message' => 'Encuesta clonada exitosamente',
                 'id_nueva_encuesta' => $nuevaEncuestaId
             ]);
+*/
+            return Redirect::route('encuesta.index')
+                ->with('success', 'Encuesta Clonada satisfactoriamente');
 
         } catch (\Exception $e) {
             DB::rollBack();
