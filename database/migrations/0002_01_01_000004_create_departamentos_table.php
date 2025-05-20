@@ -15,7 +15,7 @@ return new class extends Migration
             $table->boolean('estado')->default(true);
             $table->timestamps();
         });
-        Schema::create('departamenos_usuarios', function (Blueprint $table) {
+        Schema::create('departamentos_usuarios', function (Blueprint $table) {
             $table->foreignId('id_depto')
                 ->references('id')
                 ->on('departamentos');
@@ -28,6 +28,7 @@ return new class extends Migration
 
     public function down(): void
     {
+        Schema::dropIfExists('departamentos_usuarios');
         Schema::dropIfExists('departamentos');
     }
 };

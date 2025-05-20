@@ -16,6 +16,8 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 
 use Illuminate\Support\Facades\Redirect;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Carbon;
 use Illuminate\View\View;
 
 class EncuestaController extends Controller
@@ -189,5 +191,121 @@ class EncuestaController extends Controller
         return Redirect::route('encuesta.index')
             ->with('success', 'Encuesta deleted successfully');
     }
+
+    public function clonarEncuesta($idEncuestaOriginal)
+    {
+        DB::beginTransaction();
+
+        try {
+            // 1. Clonar encuesta
+            $encuesta = DB::table('encuestas')->where('id', $idEncuestaOriginal)->first();
+            $nuevaEncuestaId = DB::table('encuestas')->insertGetId([
+                'id_linea' => $encuesta->id_linea,
+                'nombre' => $encuesta->nombre . ' (Copia)',
+                'descripcion' => $encuesta->descripcion,
+                'estado' => $encuesta->estado,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+
+            // 2. Clonar preguntas y sus alternativas
+            $preguntas = DB::table('preguntas')->where('id_encuesta', $idEncuestaOriginal)->get();
+            $mapPreguntas = []; // Mapeo id_pregunta_original => id_pregunta_nueva
+
+            foreach ($preguntas as $pregunta) {
+                $nuevaPreguntaId = DB::table('preguntas')->insertGetId([
+                    'id_encuesta' => $nuevaEncuestaId,
+                    'id_subdimension' => $pregunta->id_subdimension,
+                    'tipo' => $pregunta->tipo,
+                    'texto' => $pregunta->texto,
+                    'posicion' => $pregunta->posicion,
+                    'id_dependencia' => null, // Se actualiza después
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+
+                $mapPreguntas[$pregunta->id] = $nuevaPreguntaId;
+            }
+
+            // Actualizar dependencias de preguntas
+            foreach ($preguntas as $pregunta) {
+                if ($pregunta->id_dependencia && isset($mapPreguntas[$pregunta->id_dependencia])) {
+                    DB::table('preguntas')
+                        ->where('id', $mapPreguntas[$pregunta->id])
+                        ->update(['id_dependencia' => $mapPreguntas[$pregunta->id_dependencia]]);
+                }
+            }
+
+            // Clonar alternativas
+            foreach ($mapPreguntas as $oldId => $newId) {
+                $alternativas = DB::table('alternativas')->where('id_pregunta', $oldId)->get();
+                foreach ($alternativas as $alt) {
+                    DB::table('alternativas')->insert([
+                        'id_pregunta' => $newId,
+                        'id_dependencia' => $alt->id_dependencia ? ($mapPreguntas[$alt->id_dependencia] ?? null) : null,
+                        'texto' => $alt->texto,
+                        'valor' => $alt->valor,
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ]);
+                }
+            }
+
+            // 3. Clonar cabecera_preguntas y cabecera_alternativas
+            $cabeceras = DB::table('cabecera_preguntas')->where('id_encuesta', $idEncuestaOriginal)->get();
+            $mapCabeceras = [];
+
+            foreach ($cabeceras as $cabecera) {
+                $nuevaCabeceraId = DB::table('cabecera_preguntas')->insertGetId([
+                    'id_encuesta' => $nuevaEncuestaId,
+                    'tipo' => $cabecera->tipo,
+                    'pregunta' => $cabecera->pregunta,
+                    'estado' => $cabecera->estado,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+
+                $mapCabeceras[$cabecera->id] = $nuevaCabeceraId;
+
+                $cabAlternativas = DB::table('cabecera_alternativas')->where('id_cabecera', $cabecera->id)->get();
+                foreach ($cabAlternativas as $cabAlt) {
+                    DB::table('cabecera_alternativas')->insert([
+                        'id_cabecera' => $nuevaCabeceraId,
+                        'pregunta' => $cabAlt->pregunta,
+                        'orden' => $cabAlt->orden,
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ]);
+                }
+            }
+
+            // 4. Clonar archivos
+            $archivos = DB::table('encuestas_archivos')->where('id_encuesta', $idEncuestaOriginal)->get();
+            foreach ($archivos as $archivo) {
+                DB::table('encuestas_archivos')->insert([
+                    'id_encuesta' => $nuevaEncuestaId,
+                    'nombre' => $archivo->nombre,
+                    'archivo' => $archivo->archivo,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'message' => 'Encuesta clonada exitosamente',
+                'id_nueva_encuesta' => $nuevaEncuestaId
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'error' => 'Error al clonar encuesta',
+                'detalle' => $e->getMessage()
+            ], 500);
+        }
+    }
+
    
 }

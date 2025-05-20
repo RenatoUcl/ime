@@ -57,12 +57,19 @@
                                             </td>
                                             <td>
                                                 <form action="{{ route('encuesta.disabled', $encuesta->id) }}" method="POST">
-                                                    <!--<a class="btn btn-sm btn-primary " href="{{ route('encuesta.show', $encuesta->id) }}" alt="Ver" title="Ver"><i class="fa fa-fw fa-eye"></i></a>-->
                                                     <a class="btn btn-sm btn-warning" href="{{ route('encuesta.edit', $encuesta->id) }}" title="Modificar"><i class="fa fa-fw fa-edit"></i></a>
                                                     @csrf
                                                     @method('PUT')
                                                     <button type="submit" class="btn btn-danger btn-sm" onclick="event.preventDefault(); confirm('Are you sure to delete?') ? this.closest('form').submit() : false;" title="Eliminar"><i class="fa fa-fw fa-trash"></i></button>
                                                 </form>
+                                                <form action="{{ route('encuesta.clonar', $encuesta->id) }}" method="POST" onsubmit="return confirm('¿Estás seguro de que deseas clonar esta encuesta?')">
+                                                    @csrf
+                                                    @method('POST')
+                                                    <button type="submit" title="Clonar Encuesta" class="btn btn-sm btn-info"><i class="fas fa-clone"></i></button>
+                                                </form>
+
+                                                <!--<a href="" title="Clonar Encuesta" class="btn btn-sm btn-info"><i class="fas fa-clone"></i></a>-->
+
                                             </td>
                                         </tr>
                                     @endforeach

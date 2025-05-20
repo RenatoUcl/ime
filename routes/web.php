@@ -183,7 +183,7 @@ Route::middleware("auth")->group(function (){
         Route::get('/encuesta/edit/{id}', 'edit')->name('encuesta.edit');
         Route::put('/encuesta/update/{id}', 'update')->name('encuesta.update');
         Route::put('/encuesta/disabled/{id}', 'disabled')->name('encuesta.disabled');
-        //Route::delete('/encuestas/destroy/{id}', 'destroy')->name('encuestas.destroy');
+        Route::post('/encuesta/{id}/clonar','clonarEncuesta')->name('encuesta.clonar');
     });
 
     // Cabecera Pregunta

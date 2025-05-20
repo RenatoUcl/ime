@@ -19,9 +19,7 @@ return new class extends Migration
             $table->unsignedInteger('tipo');
             $table->text('texto');
             $table->integer('posicion')->default('0');
-            $table->foreignId('id_dependencia')
-                ->references('id')
-                ->on('preguntas');
+            $table->foreignId('id_dependencia')->default('0');
             $table->timestamps();
         });
     }
