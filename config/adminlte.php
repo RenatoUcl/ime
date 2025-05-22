@@ -65,7 +65,7 @@ return [
 
     'logo' => 'IME',
     'logo_img' => 'assets/img/logo_ime.png',
-    'logo_img_class' => 'brand-image elevation-3',
+    'logo_img_class' => 'elevation-3',
     'logo_img_xl' => 'assets/img/logo_ime.png',
     'logo_img_xl_class' => 'brand-image-xl',
     'logo_img_alt' => 'IME',

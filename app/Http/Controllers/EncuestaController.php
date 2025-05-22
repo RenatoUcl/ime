@@ -225,7 +225,6 @@ class EncuestaController extends Controller
                 ]);
                 $mapPreguntas[$pregunta->id] = $nuevaPreguntaId;
             }
-            /*
             // Actualizar dependencias de preguntas
             foreach ($preguntas as $pregunta) {
                 if ($pregunta->id_dependencia && isset($mapPreguntas[$pregunta->id_dependencia])) {
@@ -234,7 +233,7 @@ class EncuestaController extends Controller
                         ->update(['id_dependencia' => $mapPreguntas[$pregunta->id_dependencia]]);
                 }
             }
-
+            
             // Clonar alternativas
             foreach ($mapPreguntas as $oldId => $newId) {
                 $alternativas = DB::table('alternativas')->where('id_pregunta', $oldId)->get();
@@ -289,7 +288,7 @@ class EncuestaController extends Controller
                     'updated_at' => now(),
                 ]);
             }
-            */
+            
             DB::commit();
 /*
             return response()->json([
@@ -307,7 +306,5 @@ class EncuestaController extends Controller
                 'detalle' => $e->getMessage()
             ], 500);
         }
-    }
-
-   
+    }   
 }
