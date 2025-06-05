@@ -249,6 +249,7 @@ class EncuestaController extends Controller
                 }
             }
 
+            /*
             // 3. Clonar cabecera_preguntas y cabecera_alternativas
             $cabeceras = DB::table('cabecera_preguntas')->where('id_encuesta', $idEncuestaOriginal)->get();
             $mapCabeceras = [];
@@ -288,14 +289,10 @@ class EncuestaController extends Controller
                     'updated_at' => now(),
                 ]);
             }
-            
+            */
+
             DB::commit();
-/*
-            return response()->json([
-                'message' => 'Encuesta clonada exitosamente',
-                'id_nueva_encuesta' => $nuevaEncuestaId
-            ]);
-*/
+
             return Redirect::route('encuesta.index')
                 ->with('success', 'Encuesta Clonada satisfactoriamente');
 

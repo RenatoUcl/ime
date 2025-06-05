@@ -67,5 +67,5 @@ class Pregunta extends Model
     {
         return $this->hasMany(\App\Models\Respuesta::class, 'id', 'id_pregunta');
     }
-    
+
 }

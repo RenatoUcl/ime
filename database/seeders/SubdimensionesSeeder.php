@@ -76,6 +76,7 @@ class SubdimensionesSeeder extends Seeder
                             'posicion' => $pos,
                         ]);
                     $pos++;
+                    if ($pos==4) { $pos=1;}
                     }
                 }
             }

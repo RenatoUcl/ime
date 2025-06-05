@@ -255,14 +255,15 @@ Route::middleware("auth")->group(function (){
         Route::get('/respuesta/edit/{id}', 'edit')->name('respuesta.edit');
         Route::put('/respuesta/update/{id}', 'update')->name('respuesta.update');
         Route::put('/respuesta/disabled/{id}', 'disabled')->name('respuesta.disabled');
-        //Route::delete('/respuesta/destroy/{id}', 'destroy')->name('respuesta.destroy');
     });
 
     Route::controller(ResponderController::class)->group(function(){
         Route::get('/responder','index')->name('responder.index');
-        Route::get('/responder/{idEncuesta}/{index?}', 'mostrar')->name('responder.mostrar');
+        Route::get('/responder/{idEncuesta}', 'mostrar')->name('responder.mostrar');
         Route::post('/responder/guardar', 'guardar')->name('responder.guardar');
         Route::get('/responder/{id}/continuar','continuar')->name('responder.continuar');
+
+        Route::post('/responder/guardar-respuestas-grupo', 'guardarRespuestasGrupo')->name('responder.guardarRespuestasGrupo');
     });
 
     Route::controller(IndiceMultiController::class)->group(function(){

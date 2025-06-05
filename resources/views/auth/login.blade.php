@@ -28,7 +28,7 @@
                 </div>
             </div>
             <div class="col-sm-8 px-0 d-none d-sm-block">
-                <img src="{{ asset('assets/img/ninos-login.jpg'); }}" alt="Login image" class="w-100 vh-100" style="object-fit: cover; object-position: left;">
+                <img src="{{ asset('assets/img/back_02.jpg'); }}" alt="Login image" class="w-100 vh-100" style="object-fit: cover; object-position: left;">
             </div>
         </div>
     </div>

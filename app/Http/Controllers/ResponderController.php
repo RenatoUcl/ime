@@ -13,18 +13,13 @@ use App\Models\EncuestasUsuario;
 use App\Models\Dimension;
 use App\Models\Subdimension;
 
-use App\Http\Requests\EncuestaRequest;
-use App\Http\Requests\PreguntaRequest;
-use App\Http\Requests\AlternativaRequest;
-use App\Http\Requests\RespuestaRequest;
-use App\Http\Requests\CabeceraPreguntaRequest;
-use App\Http\Requests\CabeceraAlternativaRequest;
-use App\Http\Requests\CabeceraRespuestaRequest;
-use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+
 use Illuminate\View\View;
 
 class ResponderController extends Controller
@@ -120,7 +115,7 @@ class ResponderController extends Controller
 
         $responde = new EncuestasUsuario();
         $responde->id_encuesta = $id_encuesta;
-        $responde->id_usuario = auth()->user()->id;
+        $responde->id_usuario = Auth::user()->id;
         $responde->save();
 
         return Redirect::route('responder.index')
@@ -131,7 +126,7 @@ class ResponderController extends Controller
      *  INICIO EL RESPONDER ENCUESTA
     */
 
-    public function mostrar($idEncuesta, $index = 0)
+    public function mostrar_old($idEncuesta, $index = 0)
     {
         $encuesta = Encuesta::findOrFail($idEncuesta);
         $usuario = Auth::user()->id;
@@ -227,6 +222,142 @@ class ResponderController extends Controller
     }
     /**
      * FIN
+     */
+
+    public function mostrar($idEncuesta)
+    {
+        $encuesta = Encuesta::findOrFail($idEncuesta);
+
+        $usuario = Auth::user()->id;
+
+        $registro = EncuestasUsuario::where('id_encuesta',$idEncuesta)
+            ->where('id_usuario',$usuario)
+            ->first();
+
+        if (!$registro){
+            EncuestasUsuario::create([
+                'id_encuesta' => $idEncuesta,
+                'id_usuario'  => $usuario,
+            ]);
+        }
+
+        $subdimensiones = Pregunta::join('subdimensiones', 'subdimensiones.id', '=', 'preguntas.id_subdimension')
+            ->where('preguntas.id_encuesta', 1)
+            ->select('preguntas.id_subdimension', 'subdimensiones.nombre')
+            ->distinct()
+            ->get();
+
+        $gruposDePreguntas = collect();
+
+        foreach ($subdimensiones as $subdimension) {
+            $subdimension = Subdimension::find($subdimension->id_subdimension);
+            if (!$subdimension) {
+                continue;
+            }
+
+            $subid = $subdimension->id;
+
+            $preguntas = Pregunta::select('preguntas.*', 'd.nombre as dimension','d.descripcion as ddescripcion', 'sd.nombre as subdimension')
+                ->leftJoin('subdimensiones as sd', 'sd.id', '=', 'preguntas.id_subdimension')
+                ->leftJoin('dimensiones as d', 'd.id', '=', 'sd.id_dimension')
+                ->where('id_encuesta', 1)
+                ->where('sd.id',$subid)
+                ->orderBy('posicion', 'asc')
+                ->get();
+
+            if ($preguntas->isNotEmpty()) {
+
+                $gruposDePreguntas->push([
+                    'dimension' => $preguntas[0]->dimension,
+                    'dimension_descripcion' => $preguntas[0]->ddescripcion,
+                    'subdimension_id' => $subdimension->id,
+                    'subdimension_nombre' => $subdimension->nombre,
+                    'subdimension_descripcion' => $subdimension->descripcion,
+                    'preguntas' => $preguntas,
+                ]);
+            }
+        }
+        return view('responder.mostrar', [
+            'encuesta' => $encuesta,
+            'gruposDePreguntas' => $gruposDePreguntas,
+            'totalGrupos' => $gruposDePreguntas->count(),
+        ]);
+    }
+
+ public function guardarRespuestasGrupo(Request $request)
+    {
+        $validatedData = $request->validate([
+            'encuesta_id' => 'required|integer|exists:encuestas,id',
+            'respuestas' => 'sometimes|array', // 'sometimes' si un grupo podría no tener preguntas respondibles
+            'respuestas.*.pregunta_id' => 'required|integer|exists:preguntas,id',
+            'respuestas.*.alternativa_id' => 'nullable|integer|exists:alternativas,id',
+            'respuestas.*.valor_texto' => 'nullable|string|max:65535', // Para respuestas de texto abierto
+        ]);
+
+        $userId = Auth::id();
+        if (!$userId) {
+            // Considera si permitir respuestas anónimas o requerir inicio de sesión.
+            // Si se permiten anónimas, necesitarás una forma de identificar al encuestado (ej. session ID).
+            return response()->json(['success' => false, 'message' => 'Usuario no autenticado.'], 401);
+        }
+
+        DB::beginTransaction();
+        try {
+            if (!empty($validatedData['respuestas'])) {
+                foreach ($validatedData['respuestas'] as $respuestaData) {
+                    $pregunta = Pregunta::find($respuestaData['pregunta_id']);
+                    if (!$pregunta) {
+                        continue; // Saltar si la pregunta no existe
+                    }
+
+                    $datosAGuardar = [
+                        'id_alternativa' => null,
+                        'valor' => null,          // Para el valor numérico de la alternativa
+                        'respuesta_texto' => null, // Para la respuesta de texto (requiere columna en DB)
+                        // 'nivel' => null,       // Calcular si es necesario
+                    ];
+
+                    if (!empty($respuestaData['alternativa_id'])) {
+                        $alternativa = Alternativa::find($respuestaData['alternativa_id']);
+                        if ($alternativa) {
+                            $datosAGuardar['id_alternativa'] = $alternativa->id;
+                            $datosAGuardar['valor'] = $alternativa->valor; // Asume que 'alternativas.valor' es el valor numérico
+                        }
+                    } elseif (isset($respuestaData['valor_texto'])) {
+                        // Guarda el texto en la columna 'respuesta_texto'.
+                        // Asegúrate que esta columna exista en tu tabla 'respuestas' y sea TEXT/VARCHAR.
+                        $datosAGuardar['respuesta_texto'] = $respuestaData['valor_texto'];
+                    }
+                    
+                    // Lógica para el campo 'nivel' si es necesario. Ejemplo:
+                    // if ($datosAGuardar['valor'] !== null) {
+                    //    if ($datosAGuardar['valor'] >= 4) $datosAGuardar['nivel'] = 3; // Alto
+                    //    elseif ($datosAGuardar['valor'] >= 2) $datosAGuardar['nivel'] = 2; // Medio
+                    //    else $datosAGuardar['nivel'] = 1; // Bajo
+                    // }
+
+
+                    Respuesta::updateOrCreate(
+                        [
+                            'id_encuesta' => $validatedData['encuesta_id'],
+                            'id_pregunta' => $respuestaData['pregunta_id'],
+                            'id_usuario' => $userId,
+                        ],
+                        $datosAGuardar
+                    );
+                }
+            }
+            DB::commit();
+            return response()->json(['success' => true, 'message' => 'Respuestas guardadas correctamente.']);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Error guardando respuestas de grupo: ' . $e->getMessage() . ' Trace: ' . $e->getTraceAsString());
+            return response()->json(['success' => false, 'message' => 'Error interno al guardar las respuestas.'], 500);
+        }
+    }
+
+    /**
+     * Fin Responder por subdimension
      */
 }
 
