@@ -257,9 +257,8 @@ class ResponderController extends Controller
 
             $subid = $subdimension->id;
 
-            $preguntas = Pregunta::select('preguntas.*', 'd.nombre as dimension','d.descripcion as ddescripcion', 'sd.nombre as subdimension')
+            $preguntas = Pregunta::select('preguntas.*', 'sd.nombre as subdimension')
                 ->leftJoin('subdimensiones as sd', 'sd.id', '=', 'preguntas.id_subdimension')
-                ->leftJoin('dimensiones as d', 'd.id', '=', 'sd.id_dimension')
                 ->where('id_encuesta', 1)
                 ->where('sd.id',$subid)
                 ->orderBy('posicion', 'asc')

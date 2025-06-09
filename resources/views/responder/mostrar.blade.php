@@ -75,6 +75,23 @@
         border-bottom: 1px solid #cbd5e0; /* border-gray-300 */
     }
 
+    .d-head {
+        padding: 1.25rem;
+        border: 1px solid #e2e8f0;
+        border-radius: 0.5rem;
+        box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+        margin-bottom: 10px;
+    }
+    .d-title{
+        font-size: 1.30rem;
+        font-weight: 600;
+        color: #4299e1;
+    }
+    .d-description {
+        font-size: 1rem;
+        color: #7c8085;
+        margin-top: 0.25rem;
+    }
     .subdimension-title {
         font-size: 1.25rem; /* text-xl */
         font-weight: 600; /* font-semibold */
@@ -300,8 +317,12 @@
             <h1 class="survey-title">{{ $encuesta->nombre }}</h1>
             <p class="survey-description">{{ $encuesta->descripcion }}</p>
 
+            
+
             <div id="contenedor-encuesta">
                 @if($gruposDePreguntas->isEmpty())
+            
+            
                     <div class="alert-info" role="alert">
                         <p class="font-bold">Información</p>
                         <p>Esta encuesta no tiene preguntas asignadas o agrupadas por subdimensiones.</p>
@@ -314,10 +335,6 @@
                         <input type="hidden" id="total_groups" value="{{ $totalGrupos }}">
 
                         @foreach($gruposDePreguntas as $index => $grupo)
-                            <div class="cabecera-dimension {{ $index == 0 ? '' : 'hidden' }}">
-                                <h2 class="subdimension-title">Dimensión: {{ $grupo['dimension'] }}</h2>
-                                <p class="subdimension-description">{{ $grupo['dimension_descripcion'] }}</p>
-                            </div>
 
                             <div class="grupo-preguntas {{ $index == 0 ? '' : 'hidden' }}" data-group-index="{{ $index }}">
                                 <div class="subdimension-header">
@@ -334,25 +351,25 @@
                                 </div>
 
                                 @foreach($grupo['preguntas'] as $pregunta)
+
                                     <div class="pregunta" data-pregunta-id="{{ $pregunta->id }}">
-                                        <p class="pregunta-texto">
-                                            <span class="pregunta-numero">{{ $loop->parent->iteration }}.{{ $loop->iteration }}.</span> {!! $pregunta->texto !!}
-                                        </p>
+                                        <p class="pregunta-texto">{!! $pregunta->texto !!}</p>
                                         <input type="hidden" name="preguntas_mostradas_grupo_{{ $grupo['subdimension_id'] }}[]" value="{{ $pregunta->id }}">
 
-                                        @if($pregunta->tipo == 2) {{-- Ejemplo: Tipo Opción Múltiple (radio buttons) --}}
+                                        @if($pregunta->tipo == 2)
                                             <div class="alternativas-container">
                                             @foreach($pregunta->alternativas as $alternativa)
                                                 <label class="alternativa-label">
                                                     <input type="radio"
                                                         name="respuestas[{{ $pregunta->id }}][alternativa_id]"
-                                                        value="{{ $alternativa->id }}">
+                                                        value="{{ $alternativa->id }}"
+                                                        onClick="habilitaDependencia({{ $pregunta->id }},{{ $index }})">
                                                     <span class="alternativa-texto">{!! $alternativa->texto !!}</span>
                                                 </label>
                                             @endforeach
                                             </div>
-                                        @elseif($pregunta->tipo == 1) {{-- Ejemplo: Tipo Texto Abierto --}}
-                                            <div class="alternativas-container">
+                                        @elseif($pregunta->tipo == 1)
+                                            <div class="alternativas-container" hidden>
                                             @foreach($pregunta->alternativas as $alternativa)
                                                 <label class="alternativa-label">
                                                     <input type="radio"
@@ -411,7 +428,40 @@
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
+
+                function habilitaDependencia(idPregunta,index) {
+            
+            alert(idPregunta);
+            
+            $('.respuesta').off('change').on('change', function () {
+                let $this = $(this);
+                let preguntaRespondida = $this.data('pregunta-id');
+                let alternativaSeleccionada = $this.data('alternativa-id');
+                let disparaPregunta = $this.data('dispara-pregunta');
+
+                // Ocultar todas las preguntas dependientes de esta pregunta
+                $('.pregunta[data-id-dependencia="' + preguntaRespondida + '"]').each(function () {
+                    let $dependiente = $(this);
+                    let idDependiente = $dependiente.data('id');
+
+                    if (disparaPregunta == idDependiente) {
+                        // Mostrar la pregunta dependiente activada por esta alternativa
+                        let textoAlternativa = $this.parent().text().trim();
+                        $dependiente.find('.dependencia-label').text(textoAlternativa);
+                        $dependiente.slideDown();
+                    } else {
+                        // Ocultarla y marcar como "No" (0)
+                        $dependiente.slideUp();
+                        $dependiente.find('input[type="radio"][value="0"]').prop('checked', true);
+                    }
+                });
+            });
+        }
     $(document).ready(function() {
+
+
+
+
         let currentGroupIndex = 0;
         const totalGroups = parseInt($('#total_groups').val(), 10);
         const encuestaId = $('input[name="encuesta_id"]').val();
