@@ -227,48 +227,45 @@ class ResponderController extends Controller
     public function mostrar($idEncuesta)
     {
         $encuesta = Encuesta::findOrFail($idEncuesta);
-
         $usuario = Auth::user()->id;
-
         $registro = EncuestasUsuario::where('id_encuesta',$idEncuesta)
             ->where('id_usuario',$usuario)
             ->first();
-
         if (!$registro){
             EncuestasUsuario::create([
                 'id_encuesta' => $idEncuesta,
                 'id_usuario'  => $usuario,
             ]);
         }
-
-        $subdimensiones = Pregunta::join('subdimensiones', 'subdimensiones.id', '=', 'preguntas.id_subdimension')
+        $subdimensiones = Pregunta::join('subdimensiones as sd', 'sd.id', '=', 'preguntas.id_subdimension')
+            ->leftJoin('dimensiones as d', 'd.id', '=', 'sd.id_dimension')
             ->where('preguntas.id_encuesta', 1)
-            ->select('preguntas.id_subdimension', 'subdimensiones.nombre')
+            ->select([
+                'sd.id',
+                'd.id as did',
+                'd.nombre as dnombre',
+                'd.descripcion as ddescrip',
+                'preguntas.id_subdimension',
+                'sd.nombre'
+            ])
             ->distinct()
             ->get();
 
         $gruposDePreguntas = collect();
-
+        
         foreach ($subdimensiones as $subdimension) {
-            $subdimension = Subdimension::find($subdimension->id_subdimension);
-            if (!$subdimension) {
-                continue;
-            }
-
             $subid = $subdimension->id;
 
-            $preguntas = Pregunta::select('preguntas.*', 'sd.nombre as subdimension')
+            $preguntas = Pregunta::select('preguntas.*','sd.nombre as subdimension')
                 ->leftJoin('subdimensiones as sd', 'sd.id', '=', 'preguntas.id_subdimension')
                 ->where('id_encuesta', 1)
                 ->where('sd.id',$subid)
                 ->orderBy('posicion', 'asc')
                 ->get();
-
             if ($preguntas->isNotEmpty()) {
-
                 $gruposDePreguntas->push([
-                    'dimension' => $preguntas[0]->dimension,
-                    'dimension_descripcion' => $preguntas[0]->ddescripcion,
+                    'dimension' => $subdimension->dnombre,
+                    'dimension_descripcion' => $subdimension->ddescrip,
                     'subdimension_id' => $subdimension->id,
                     'subdimension_nombre' => $subdimension->nombre,
                     'subdimension_descripcion' => $subdimension->descripcion,
@@ -276,6 +273,7 @@ class ResponderController extends Controller
                 ]);
             }
         }
+
         return view('responder.mostrar', [
             'encuesta' => $encuesta,
             'gruposDePreguntas' => $gruposDePreguntas,

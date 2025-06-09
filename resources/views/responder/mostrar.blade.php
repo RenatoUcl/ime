@@ -316,13 +316,8 @@
         <div class="survey-main-container">
             <h1 class="survey-title">{{ $encuesta->nombre }}</h1>
             <p class="survey-description">{{ $encuesta->descripcion }}</p>
-
-            
-
             <div id="contenedor-encuesta">
                 @if($gruposDePreguntas->isEmpty())
-            
-            
                     <div class="alert-info" role="alert">
                         <p class="font-bold">Información</p>
                         <p>Esta encuesta no tiene preguntas asignadas o agrupadas por subdimensiones.</p>
@@ -337,53 +332,58 @@
                         @foreach($gruposDePreguntas as $index => $grupo)
 
                             <div class="grupo-preguntas {{ $index == 0 ? '' : 'hidden' }}" data-group-index="{{ $index }}">
-                                <div class="subdimension-header">
-                                    
+
+                                <div>
                                     <div>
-                                        <h2 class="subdimension-title">
-                                            Subdimensión: {{ $grupo['subdimension_nombre'] }}
+                                        <h2>Dimensión: {{ $grupo['dimension'] }}</h2>
+                                        <p>{{ $grupo['dimension_descripcion'] }}</p>
+                                    </div>
+                                </div>
+
+                                <div class="subdimension-header">
+                                    <div>
+                                        <h2 class="subdimension-title">Subdimensión: {{ $grupo['subdimension_nombre'] }}
                                         </h2>
-                                    
                                         @if($grupo['subdimension_descripcion'])
                                         <p class="subdimension-description">{{ $grupo['subdimension_descripcion'] }}</p>
                                         @endif
                                     </div>
                                 </div>
-
                                 @foreach($grupo['preguntas'] as $pregunta)
-
-                                    <div class="pregunta" data-pregunta-id="{{ $pregunta->id }}">
-                                        <p class="pregunta-texto">{!! $pregunta->texto !!}</p>
-                                        <input type="hidden" name="preguntas_mostradas_grupo_{{ $grupo['subdimension_id'] }}[]" value="{{ $pregunta->id }}">
-
-                                        @if($pregunta->tipo == 2)
+                                    @if($pregunta->tipo == 2)
+                                        <div class="pregunta" data-pregunta-id="{{ $pregunta->id }}">
+                                            <p class="pregunta-texto">{!! $pregunta->texto !!}</p>
+                                            <input type="hidden" name="preguntas_mostradas_grupo_{{ $grupo['subdimension_id'] }}[]" value="{{ $pregunta->id }}">
                                             <div class="alternativas-container">
-                                            @foreach($pregunta->alternativas as $alternativa)
-                                                <label class="alternativa-label">
-                                                    <input type="radio"
-                                                        name="respuestas[{{ $pregunta->id }}][alternativa_id]"
-                                                        value="{{ $alternativa->id }}"
-                                                        onClick="habilitaDependencia({{ $pregunta->id }},{{ $index }})">
-                                                    <span class="alternativa-texto">{!! $alternativa->texto !!}</span>
-                                                </label>
-                                            @endforeach
+                                                @foreach($pregunta->alternativas as $alternativa)
+                                                    <label class="alternativa-label">
+                                                        <input type="radio"
+                                                            name="respuestas[{{ $pregunta->id }}][alternativa_id]"
+                                                            value="{{ $alternativa->id }}"
+                                                            onClick="habilitaDependencia({{ $pregunta->id }},{{ $alternativa->id }},{{ $index }})">
+                                                        <span class="alternativa-texto">{!! $alternativa->texto !!}</span>
+                                                    </label>
+                                                @endforeach
                                             </div>
-                                        @elseif($pregunta->tipo == 1)
-                                            <div class="alternativas-container" hidden>
-                                            @foreach($pregunta->alternativas as $alternativa)
-                                                <label class="alternativa-label">
-                                                    <input type="radio"
-                                                        name="respuestas[{{ $pregunta->id }}][alternativa_id]"
-                                                        value="{{ $alternativa->id }}">
-                                                    <span class="alternativa-texto">{!! $alternativa->texto !!}</span>
-                                                </label>
-                                            @endforeach
+                                        </div>
+                                    @elseif($pregunta->tipo == 1)
+                                        <div class="pregunta" data-pregunta-id="{{ $pregunta->id }}" style="display: none">
+                                            <p class="pregunta-texto">{!! $pregunta->texto !!}</p>
+                                            <input type="hidden" name="preguntas_mostradas_grupo_{{ $grupo['subdimension_id'] }}[]" value="{{ $pregunta->id }}">
+                                            <div class="alternativas-container">
+                                                @foreach($pregunta->alternativas as $alternativa)
+                                                    <label class="alternativa-label">
+                                                        <input type="radio"
+                                                            name="respuestas[{{ $pregunta->id }}][alternativa_id]"
+                                                            value="{{ $alternativa->id }}">
+                                                        <span class="alternativa-texto">{!! $alternativa->texto !!}</span>
+                                                    </label>
+                                                @endforeach
                                             </div>
-                                        @else
-                                            <p class="pregunta-tipo-no-configurado">Tipo de pregunta ({{$pregunta->tipo}}) no configurado para visualización.</p>
-                                        @endif
-                                        <div class="error-message"></div>
-                                    </div>
+                                        </div>
+                                    @else
+                                        <p class="pregunta-tipo-no-configurado">Tipo de pregunta ({{$pregunta->tipo}}) no configurado para visualización.</p>
+                                    @endif
                                 @endforeach
                             </div>
                         @endforeach
@@ -428,11 +428,20 @@
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
+        function habilitaDependencia(idPregunta,idAlternativa,index) {
 
-                function habilitaDependencia(idPregunta,index) {
-            
-            alert(idPregunta);
-            
+            // idPregunta = Es la pregunta de origen
+            // idAlternativa = Es la alternativa de origen 
+            // index = Corresponde al grupo de donde vienen la pregunta
+
+            var grupoPreguntas = {!! json_encode($gruposDePreguntas->toArray()) !!};
+
+            grupoPreguntas.forEach(function(grupo, index) {
+                console.log("Grupo:", grupo);
+            });
+
+            alert("Pregunta ID: " + idPregunta + " || Alternativa ID: " + idAlternativa);
+
             $('.respuesta').off('change').on('change', function () {
                 let $this = $(this);
                 let preguntaRespondida = $this.data('pregunta-id');
