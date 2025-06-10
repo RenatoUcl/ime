@@ -367,18 +367,19 @@
                                             </div>
                                         </div>
                                     @elseif($pregunta->tipo == 1)
-                                        <div class="pregunta" data-pregunta-id="{{ $pregunta->id }}" style="display: none">
+                                        <div class="pregunta" data-pregunta-id="{{ $pregunta->id }}" id="pregunta{{ $index }}" style="display: none">
                                             <p class="pregunta-texto">{!! $pregunta->texto !!}</p>
+                                            <p class="pregunta-texto" id="subpregunta{{ $index }}"></p>
                                             <input type="hidden" name="preguntas_mostradas_grupo_{{ $grupo['subdimension_id'] }}[]" value="{{ $pregunta->id }}">
                                             <div class="alternativas-container">
-                                                @foreach($pregunta->alternativas as $alternativa)
-                                                    <label class="alternativa-label">
-                                                        <input type="radio"
-                                                            name="respuestas[{{ $pregunta->id }}][alternativa_id]"
-                                                            value="{{ $alternativa->id }}">
-                                                        <span class="alternativa-texto">{!! $alternativa->texto !!}</span>
-                                                    </label>
-                                                @endforeach
+                                                <label class="alternativa-label">
+                                                    <input type="radio" name="respuestas[{{ $pregunta->id }}][alternativa_id]" value="1">
+                                                    <span class="alternativa-texto">SI</span>
+                                                </label>
+                                                <label class="alternativa-label">
+                                                    <input type="radio" name="respuestas[{{ $pregunta->id }}][alternativa_id]" value="0">
+                                                    <span class="alternativa-texto">NO</span>
+                                                </label>
                                             </div>
                                         </div>
                                     @else
@@ -428,273 +429,255 @@
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
-        function habilitaDependencia(idPregunta,idAlternativa,index) {
-
+        function habilitaDependencia(idPregunta,idAlternativa,indice) {
             // idPregunta = Es la pregunta de origen
             // idAlternativa = Es la alternativa de origen 
-            // index = Corresponde al grupo de donde vienen la pregunta
+            // indice = Corresponde al grupo de donde vienen la pregunta
 
-            var grupoPreguntas = {!! json_encode($gruposDePreguntas->toArray()) !!};
-
+            // obtengo el todas las preguntas agrupadas por el indice
+            let grupoPreguntas = {!! json_encode($gruposDePreguntas->toArray()) !!};
+            
+            // recorro el array de las preguntas agupadas con el fin de obtener 
+            // las preguntas y alternativas correspondientes al grupo en cuestión.
             grupoPreguntas.forEach(function(grupo, index) {
-                console.log("Grupo:", grupo);
-            });
-
-            alert("Pregunta ID: " + idPregunta + " || Alternativa ID: " + idAlternativa);
-
-            $('.respuesta').off('change').on('change', function () {
-                let $this = $(this);
-                let preguntaRespondida = $this.data('pregunta-id');
-                let alternativaSeleccionada = $this.data('alternativa-id');
-                let disparaPregunta = $this.data('dispara-pregunta');
-
-                // Ocultar todas las preguntas dependientes de esta pregunta
-                $('.pregunta[data-id-dependencia="' + preguntaRespondida + '"]').each(function () {
-                    let $dependiente = $(this);
-                    let idDependiente = $dependiente.data('id');
-
-                    if (disparaPregunta == idDependiente) {
-                        // Mostrar la pregunta dependiente activada por esta alternativa
-                        let textoAlternativa = $this.parent().text().trim();
-                        $dependiente.find('.dependencia-label').text(textoAlternativa);
-                        $dependiente.slideDown();
+                // Filtro las preguntas del grupo en cuestión.
+                if (index == indice){
+                    // obtengo la pregunta que tiene dependencia en base a la alternativa seleccionada
+                    let pregunta = grupo.preguntas.find(p => p.id_dependencia == idPregunta);                    
+                    if (pregunta){
+                        console.log(pregunta);
                     } else {
-                        // Ocultarla y marcar como "No" (0)
-                        $dependiente.slideUp();
-                        $dependiente.find('input[type="radio"][value="0"]').prop('checked', true);
+                        console.log(pregunta);
+                    }
+                }
+            });    
+        }
+
+        $(document).ready(function() {
+            let currentGroupIndex = 0;
+            const totalGroups = parseInt($('#total_groups').val(), 10);
+            const encuestaId = $('input[name="encuesta_id"]').val();
+
+            function updateProgreso() {
+                $('#current-group-display').text(currentGroupIndex + 1);
+                $('#total-groups-display').text(totalGroups);
+            }
+
+            function showGroup(index) {
+                $('.grupo-preguntas').addClass('hidden');
+                $(`.grupo-preguntas[data-group-index="${index}"]`).removeClass('hidden');
+                $('#current_group_index').val(index);
+                updateProgreso();
+
+                $('#btn-anterior').prop('disabled', index === 0);
+                if (index === totalGroups - 1) {
+                    $('#btn-siguiente').addClass('hidden');
+                    $('#btn-finalizar').removeClass('hidden');
+                } else {
+                    $('#btn-siguiente').removeClass('hidden');
+                    $('#btn-finalizar').addClass('hidden');
+                }
+                // Scroll suave al inicio del grupo de preguntas
+                $('html, body').animate({
+                    scrollTop: $(`.grupo-preguntas[data-group-index="${index}"]`).offset().top - 80 // 80px de margen superior
+                }, 300);
+            }
+
+            function validateCurrentGroup() {
+                let isValid = true;
+                $(`.grupo-preguntas[data-group-index="${currentGroupIndex}"] .pregunta`).each(function() {
+                    const preguntaDiv = $(this);
+                    preguntaDiv.find('.error-message').text(''); // Limpiar errores previos
+                    preguntaDiv.removeClass('border-red-400').addClass('border-gray-200'); // Resetear borde
+
+                    let answered = false;
+                    const preguntaId = preguntaDiv.data('pregunta-id');
+
+                    // Validación para radios
+                    if (preguntaDiv.find(`input[type="radio"][name="respuestas[${preguntaId}][alternativa_id]"]`).length > 0) {
+                        if (preguntaDiv.find(`input[type="radio"][name="respuestas[${preguntaId}][alternativa_id]"]:checked`).length > 0) {
+                            answered = true;
+                        }
+                    }
+                    // Validación para textareas (asumimos que son obligatorias si existen)
+                    else if (preguntaDiv.find(`textarea[name="respuestas[${preguntaId}][valor_texto]"]`).length > 0) {
+                        if (preguntaDiv.find(`textarea[name="respuestas[${preguntaId}][valor_texto]"]`).val().trim() !== '') {
+                            answered = true;
+                        }
+                    }
+                    // Validación para checkboxes (al menos uno debe estar seleccionado)
+                    else if (preguntaDiv.find(`input[type="checkbox"][name="respuestas[${preguntaId}][alternativas_seleccionadas][]"]`).length > 0) {
+                        if (preguntaDiv.find(`input[type="checkbox"][name="respuestas[${preguntaId}][alternativas_seleccionadas][]"]:checked`).length > 0) {
+                            answered = true;
+                        }
+                    }
+                    // Añadir más validaciones para otros tipos de pregunta si es necesario
+                    else {
+                        // Si no es un tipo conocido para validar, asumimos que no requiere respuesta o es un error de configuración
+                        // answered = true; // O false si todos los tipos deben ser validados
+                    }
+
+                    // Si la pregunta tiene alternativas o es un textarea, y no fue respondida, marcar como error
+                    // (Esto asume que todas las preguntas son obligatorias. Ajustar si hay preguntas opcionales)
+                    const hasInputs = preguntaDiv.find('input, textarea').length > 0;
+                    if (hasInputs && !answered) {
+                        isValid = false;
+                        preguntaDiv.find('.error-message').text('Esta pregunta es obligatoria.');
+                        preguntaDiv.removeClass('border-gray-200').addClass('border-red-400'); // Resaltar pregunta no respondida
+                    }
+                });
+                return isValid;
+            }
+
+            function collectAnswersForCurrentGroup() {
+                const respuestas = [];
+                $(`.grupo-preguntas[data-group-index="${currentGroupIndex}"] .pregunta`).each(function() {
+                    const preguntaId = $(this).data('pregunta-id');
+                    const $radioChecked = $(this).find(`input[type="radio"][name="respuestas[${preguntaId}][alternativa_id]"]:checked`);
+                    const $textarea = $(this).find(`textarea[name="respuestas[${preguntaId}][valor_texto]"]`);
+                    const $checkboxesChecked = $(this).find(`input[type="checkbox"][name="respuestas[${preguntaId}][alternativas_seleccionadas][]"]:checked`);
+
+                    if ($radioChecked.length > 0) {
+                        respuestas.push({
+                            pregunta_id: preguntaId,
+                            alternativa_id: $radioChecked.val(),
+                            valor_texto: null
+                        });
+                    } else if ($textarea.length > 0 && $textarea.val().trim() !== '') {
+                        respuestas.push({
+                            pregunta_id: preguntaId,
+                            alternativa_id: null,
+                            valor_texto: $textarea.val().trim()
+                        });
+                    } else if ($checkboxesChecked.length > 0) {
+                        // Para checkboxes, podrías querer guardar cada selección como una respuesta separada
+                        // o enviar un array de IDs de alternativas. La estructura actual del backend
+                        // (updateOrCreate por pregunta) es más adecuada para una alternativa por respuesta.
+                        // Si una pregunta de checkbox puede tener múltiples respuestas,
+                        // necesitarás ajustar el backend y cómo se guardan.
+                        // Por ahora, enviaremos la primera seleccionada o podrías concatenar.
+                        // Este es un ejemplo simple, ajustar según necesidad:
+                        $checkboxesChecked.each(function() {
+                            respuestas.push({
+                                pregunta_id: preguntaId,
+                                alternativa_id: $(this).val(), // Guarda cada checkbox como una entrada de respuesta (requiere ajuste en backend si una pregunta solo tiene una fila en 'respuestas')
+                                                            // O enviar un array: 'alternativas_ids': $checkboxesChecked.map((_,el) => el.value).get()
+                                valor_texto: null
+                            });
+                        });
+                    }
+                });
+                return respuestas;
+            }
+
+            function saveGroupAnswers(callback) {
+                const respuestasData = collectAnswersForCurrentGroup();
+
+                // Solo enviar AJAX si hay respuestas para guardar.
+                // Si el grupo no tenía preguntas o todas eran opcionales y no se respondieron,
+                // `respuestasData` podría estar vacío.
+                if (respuestasData.length === 0) {
+                    // Si no hay datos que enviar (ej. grupo vacío o preguntas opcionales no respondidas),
+                    // simplemente ejecutar el callback como éxito para pasar al siguiente grupo.
+                    if (callback) callback(true);
+                    return;
+                }
+
+                $('#loading-indicator').removeClass('hidden');
+
+                $.ajax({
+                    url: '{{ route("responder.guardarRespuestasGrupo") }}',
+                    type: 'POST',
+                    data: {
+                        _token: $('input[name="_token"]').val(),
+                        encuesta_id: encuestaId,
+                        respuestas: respuestasData
+                    },
+                    success: function(response) {
+                        $('#loading-indicator').addClass('hidden');
+                        if (response.success) {
+                            if (callback) callback(true);
+                        } else {
+                            alert('Error al guardar respuestas: ' + (response.message || 'Error desconocido.'));
+                            if (callback) callback(false);
+                        }
+                    },
+                    error: function(xhr) {
+                        $('#loading-indicator').addClass('hidden');
+                        let errorMsg = 'Error de comunicación al guardar respuestas. Por favor, inténtelo de nuevo.';
+                        if (xhr.responseJSON && xhr.responseJSON.message) {
+                            errorMsg = xhr.responseJSON.message;
+                        } else if (xhr.responseText) {
+                            try {
+                                const parsedError = JSON.parse(xhr.responseText);
+                                if (parsedError && parsedError.message) errorMsg = parsedError.message;
+                            } catch (e) { /* no hacer nada si no es JSON */ }
+                        }
+                        alert(errorMsg);
+                        console.error("Error guardando respuestas: ", xhr);
+                        if (callback) callback(false);
+                    }
+                });
+            }
+
+            $('#btn-siguiente').on('click', function() {
+                if (!validateCurrentGroup()) {
+                    // Scroll al primer error
+                    const firstError = $('.pregunta.border-red-400').first();
+                    if (firstError.length) {
+                        $('html, body').animate({
+                            scrollTop: firstError.offset().top - 80
+                        }, 300);
+                    }
+                    alert('Por favor, responda todas las preguntas obligatorias de esta sección.');
+                    return;
+                }
+                saveGroupAnswers(function(success) {
+                    if (success) {
+                        if (currentGroupIndex < totalGroups - 1) {
+                            currentGroupIndex++;
+                            showGroup(currentGroupIndex);
+                        }
                     }
                 });
             });
-        }
-    $(document).ready(function() {
 
+            $('#btn-anterior').on('click', function() {
+                if (currentGroupIndex > 0) {
+                    // Nota: Las respuestas del grupo actual NO se guardan al retroceder.
+                    // Esto es una decisión de diseño. Si deseas guardarlas, llama a saveGroupAnswers.
+                    currentGroupIndex--;
+                    showGroup(currentGroupIndex);
+                }
+            });
 
+            $('#btn-finalizar').on('click', function() {
+                if (!validateCurrentGroup()) {
+                    const firstError = $('.pregunta.border-red-400').first();
+                    if (firstError.length) {
+                        $('html, body').animate({
+                            scrollTop: firstError.offset().top - 80
+                        }, 300);
+                    }
+                    alert('Por favor, responda todas las preguntas obligatorias de esta sección antes de finalizar.');
+                    return;
+                }
+                saveGroupAnswers(function(success) {
+                    if (success) {
+                        $('#form-encuesta, #btn-anterior, #btn-siguiente, #btn-finalizar, #progreso-encuesta').addClass('hidden');
+                        $('#mensaje-final').removeClass('hidden');
+                        $('html, body').animate({ scrollTop: $('#mensaje-final').offset().top - 80 }, 300);
+                    }
+                });
+            });
 
-
-        let currentGroupIndex = 0;
-        const totalGroups = parseInt($('#total_groups').val(), 10);
-        const encuestaId = $('input[name="encuesta_id"]').val();
-
-        function updateProgreso() {
-            $('#current-group-display').text(currentGroupIndex + 1);
-            $('#total-groups-display').text(totalGroups);
-        }
-
-        function showGroup(index) {
-            $('.grupo-preguntas').addClass('hidden');
-            $(`.grupo-preguntas[data-group-index="${index}"]`).removeClass('hidden');
-            $('#current_group_index').val(index);
-            updateProgreso();
-
-            $('#btn-anterior').prop('disabled', index === 0);
-            if (index === totalGroups - 1) {
-                $('#btn-siguiente').addClass('hidden');
-                $('#btn-finalizar').removeClass('hidden');
+            // Inicializar la visualización del primer grupo y el progreso
+            if (totalGroups > 0) {
+                showGroup(0);
             } else {
-                $('#btn-siguiente').removeClass('hidden');
-                $('#btn-finalizar').addClass('hidden');
-            }
-            // Scroll suave al inicio del grupo de preguntas
-            $('html, body').animate({
-                scrollTop: $(`.grupo-preguntas[data-group-index="${index}"]`).offset().top - 80 // 80px de margen superior
-            }, 300);
-        }
-
-        function validateCurrentGroup() {
-            let isValid = true;
-            $(`.grupo-preguntas[data-group-index="${currentGroupIndex}"] .pregunta`).each(function() {
-                const preguntaDiv = $(this);
-                preguntaDiv.find('.error-message').text(''); // Limpiar errores previos
-                preguntaDiv.removeClass('border-red-400').addClass('border-gray-200'); // Resetear borde
-
-                let answered = false;
-                const preguntaId = preguntaDiv.data('pregunta-id');
-
-                // Validación para radios
-                if (preguntaDiv.find(`input[type="radio"][name="respuestas[${preguntaId}][alternativa_id]"]`).length > 0) {
-                    if (preguntaDiv.find(`input[type="radio"][name="respuestas[${preguntaId}][alternativa_id]"]:checked`).length > 0) {
-                        answered = true;
-                    }
-                }
-                // Validación para textareas (asumimos que son obligatorias si existen)
-                else if (preguntaDiv.find(`textarea[name="respuestas[${preguntaId}][valor_texto]"]`).length > 0) {
-                    if (preguntaDiv.find(`textarea[name="respuestas[${preguntaId}][valor_texto]"]`).val().trim() !== '') {
-                        answered = true;
-                    }
-                }
-                // Validación para checkboxes (al menos uno debe estar seleccionado)
-                else if (preguntaDiv.find(`input[type="checkbox"][name="respuestas[${preguntaId}][alternativas_seleccionadas][]"]`).length > 0) {
-                    if (preguntaDiv.find(`input[type="checkbox"][name="respuestas[${preguntaId}][alternativas_seleccionadas][]"]:checked`).length > 0) {
-                        answered = true;
-                    }
-                }
-                // Añadir más validaciones para otros tipos de pregunta si es necesario
-                else {
-                    // Si no es un tipo conocido para validar, asumimos que no requiere respuesta o es un error de configuración
-                    // answered = true; // O false si todos los tipos deben ser validados
-                }
-
-                // Si la pregunta tiene alternativas o es un textarea, y no fue respondida, marcar como error
-                // (Esto asume que todas las preguntas son obligatorias. Ajustar si hay preguntas opcionales)
-                const hasInputs = preguntaDiv.find('input, textarea').length > 0;
-                if (hasInputs && !answered) {
-                    isValid = false;
-                    preguntaDiv.find('.error-message').text('Esta pregunta es obligatoria.');
-                    preguntaDiv.removeClass('border-gray-200').addClass('border-red-400'); // Resaltar pregunta no respondida
-                }
-            });
-            return isValid;
-        }
-
-        function collectAnswersForCurrentGroup() {
-            const respuestas = [];
-            $(`.grupo-preguntas[data-group-index="${currentGroupIndex}"] .pregunta`).each(function() {
-                const preguntaId = $(this).data('pregunta-id');
-                const $radioChecked = $(this).find(`input[type="radio"][name="respuestas[${preguntaId}][alternativa_id]"]:checked`);
-                const $textarea = $(this).find(`textarea[name="respuestas[${preguntaId}][valor_texto]"]`);
-                const $checkboxesChecked = $(this).find(`input[type="checkbox"][name="respuestas[${preguntaId}][alternativas_seleccionadas][]"]:checked`);
-
-                if ($radioChecked.length > 0) {
-                    respuestas.push({
-                        pregunta_id: preguntaId,
-                        alternativa_id: $radioChecked.val(),
-                        valor_texto: null
-                    });
-                } else if ($textarea.length > 0 && $textarea.val().trim() !== '') {
-                    respuestas.push({
-                        pregunta_id: preguntaId,
-                        alternativa_id: null,
-                        valor_texto: $textarea.val().trim()
-                    });
-                } else if ($checkboxesChecked.length > 0) {
-                    // Para checkboxes, podrías querer guardar cada selección como una respuesta separada
-                    // o enviar un array de IDs de alternativas. La estructura actual del backend
-                    // (updateOrCreate por pregunta) es más adecuada para una alternativa por respuesta.
-                    // Si una pregunta de checkbox puede tener múltiples respuestas,
-                    // necesitarás ajustar el backend y cómo se guardan.
-                    // Por ahora, enviaremos la primera seleccionada o podrías concatenar.
-                    // Este es un ejemplo simple, ajustar según necesidad:
-                    $checkboxesChecked.each(function() {
-                        respuestas.push({
-                            pregunta_id: preguntaId,
-                            alternativa_id: $(this).val(), // Guarda cada checkbox como una entrada de respuesta (requiere ajuste en backend si una pregunta solo tiene una fila en 'respuestas')
-                                                        // O enviar un array: 'alternativas_ids': $checkboxesChecked.map((_,el) => el.value).get()
-                            valor_texto: null
-                        });
-                    });
-                }
-            });
-            return respuestas;
-        }
-
-        function saveGroupAnswers(callback) {
-            const respuestasData = collectAnswersForCurrentGroup();
-
-            // Solo enviar AJAX si hay respuestas para guardar.
-            // Si el grupo no tenía preguntas o todas eran opcionales y no se respondieron,
-            // `respuestasData` podría estar vacío.
-            if (respuestasData.length === 0) {
-                // Si no hay datos que enviar (ej. grupo vacío o preguntas opcionales no respondidas),
-                // simplemente ejecutar el callback como éxito para pasar al siguiente grupo.
-                if (callback) callback(true);
-                return;
-            }
-
-            $('#loading-indicator').removeClass('hidden');
-
-            $.ajax({
-                url: '{{ route("responder.guardarRespuestasGrupo") }}',
-                type: 'POST',
-                data: {
-                    _token: $('input[name="_token"]').val(),
-                    encuesta_id: encuestaId,
-                    respuestas: respuestasData
-                },
-                success: function(response) {
-                    $('#loading-indicator').addClass('hidden');
-                    if (response.success) {
-                        if (callback) callback(true);
-                    } else {
-                        alert('Error al guardar respuestas: ' + (response.message || 'Error desconocido.'));
-                        if (callback) callback(false);
-                    }
-                },
-                error: function(xhr) {
-                    $('#loading-indicator').addClass('hidden');
-                    let errorMsg = 'Error de comunicación al guardar respuestas. Por favor, inténtelo de nuevo.';
-                    if (xhr.responseJSON && xhr.responseJSON.message) {
-                        errorMsg = xhr.responseJSON.message;
-                    } else if (xhr.responseText) {
-                        try {
-                            const parsedError = JSON.parse(xhr.responseText);
-                            if (parsedError && parsedError.message) errorMsg = parsedError.message;
-                        } catch (e) { /* no hacer nada si no es JSON */ }
-                    }
-                    alert(errorMsg);
-                    console.error("Error guardando respuestas: ", xhr);
-                    if (callback) callback(false);
-                }
-            });
-        }
-
-        $('#btn-siguiente').on('click', function() {
-            if (!validateCurrentGroup()) {
-                // Scroll al primer error
-                const firstError = $('.pregunta.border-red-400').first();
-                if (firstError.length) {
-                    $('html, body').animate({
-                        scrollTop: firstError.offset().top - 80
-                    }, 300);
-                }
-                alert('Por favor, responda todas las preguntas obligatorias de esta sección.');
-                return;
-            }
-            saveGroupAnswers(function(success) {
-                if (success) {
-                    if (currentGroupIndex < totalGroups - 1) {
-                        currentGroupIndex++;
-                        showGroup(currentGroupIndex);
-                    }
-                }
-            });
-        });
-
-        $('#btn-anterior').on('click', function() {
-            if (currentGroupIndex > 0) {
-                // Nota: Las respuestas del grupo actual NO se guardan al retroceder.
-                // Esto es una decisión de diseño. Si deseas guardarlas, llama a saveGroupAnswers.
-                currentGroupIndex--;
-                showGroup(currentGroupIndex);
+                $('#btn-siguiente, #btn-anterior, #btn-finalizar, #progreso-encuesta').addClass('hidden');
             }
         });
-
-        $('#btn-finalizar').on('click', function() {
-            if (!validateCurrentGroup()) {
-                const firstError = $('.pregunta.border-red-400').first();
-                if (firstError.length) {
-                    $('html, body').animate({
-                        scrollTop: firstError.offset().top - 80
-                    }, 300);
-                }
-                alert('Por favor, responda todas las preguntas obligatorias de esta sección antes de finalizar.');
-                return;
-            }
-            saveGroupAnswers(function(success) {
-                if (success) {
-                    $('#form-encuesta, #btn-anterior, #btn-siguiente, #btn-finalizar, #progreso-encuesta').addClass('hidden');
-                    $('#mensaje-final').removeClass('hidden');
-                    $('html, body').animate({ scrollTop: $('#mensaje-final').offset().top - 80 }, 300);
-                }
-            });
-        });
-
-        // Inicializar la visualización del primer grupo y el progreso
-        if (totalGroups > 0) {
-            showGroup(0);
-        } else {
-            $('#btn-siguiente, #btn-anterior, #btn-finalizar, #progreso-encuesta').addClass('hidden');
-        }
-    });
     </script>
 </section>
 @endsection
