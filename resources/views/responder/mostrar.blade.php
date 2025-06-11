@@ -350,6 +350,9 @@
                                     </div>
                                 </div>
                                 @foreach($grupo['preguntas'] as $pregunta)
+
+                                    
+
                                     @if($pregunta->tipo == 2)
                                         <div class="pregunta" data-pregunta-id="{{ $pregunta->id }}">
                                             <p class="pregunta-texto">{!! $pregunta->texto !!}</p>
@@ -435,7 +438,7 @@
             // indice = Corresponde al grupo de donde vienen la pregunta
 
             // obtengo el todas las preguntas agrupadas por el indice
-            let grupoPreguntas = {!! json_encode($gruposDePreguntas->toArray()) !!};
+            const grupoPreguntas = {!! json_encode($gruposDePreguntas->toArray()) !!};
             
             // recorro el array de las preguntas agupadas con el fin de obtener 
             // las preguntas y alternativas correspondientes al grupo en cuestión.
@@ -443,11 +446,16 @@
                 // Filtro las preguntas del grupo en cuestión.
                 if (index == indice){
                     // obtengo la pregunta que tiene dependencia en base a la alternativa seleccionada
-                    let pregunta = grupo.preguntas.find(p => p.id_dependencia == idPregunta);                    
+                    const pregunta = grupo.preguntas.find(p => p.id_dependencia == idPregunta);                    
                     if (pregunta){
-                        console.log(pregunta);
-                    } else {
-                        console.log(pregunta);
+                        const alternativa = pregunta.alternativas.find(a => a.id_dependencia === idAlternativa);
+                        if(alternativa){
+                            const subpregunta = alternativa.texto;
+                            document.getElementById("pregunta" + index).style.display = "block";
+                            document.getElementById("subpregunta" + index).innerHTML = subpregunta;
+                        } else {
+                            document.getElementById("pregunta" + index).style.display = "none";
+                        }
                     }
                 }
             });    

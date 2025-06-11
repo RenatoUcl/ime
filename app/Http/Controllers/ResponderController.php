@@ -123,105 +123,7 @@ class ResponderController extends Controller
     }
 
     /**
-     *  INICIO EL RESPONDER ENCUESTA
-    */
-
-    public function mostrar_old($idEncuesta, $index = 0)
-    {
-        $encuesta = Encuesta::findOrFail($idEncuesta);
-        $usuario = Auth::user()->id;
-
-        $registro = EncuestasUsuario::where('id_encuesta',$idEncuesta)
-            ->where('id_usuario',$usuario)
-            ->first();
-
-        if (!$registro){
-            EncuestasUsuario::create([
-                'id_encuesta' => $idEncuesta,
-                'id_usuario'  => $usuario,
-            ]);
-        }
-
-        $preguntas = Pregunta::select('preguntas.*', 'd.nombre as dimension', 'sd.nombre as subdimension')
-            ->leftJoin('subdimensiones as sd', 'sd.id', '=', 'preguntas.id_subdimension')
-            ->leftJoin('dimensiones as d', 'd.id', '=', 'sd.id_dimension')
-            ->where('id_encuesta', 1)
-            ->orderBy('id_subdimension')
-            ->orderBy('posicion', 'asc')
-            ->get();
-        
-        $totalPreguntas = count($preguntas);
-
-        // Obtener las respuestas que ha dado el usuario a esta encuesta
-        $preguntasRespondidas = Respuesta::whereIn('id_pregunta', $preguntas->pluck('id'))
-            ->where('id_usuario', $usuario)
-            ->pluck('id_pregunta')
-            ->toArray();
-        $index=count($preguntasRespondidas);
-
-        if ($index==$totalPreguntas){
-            return redirect()->route('responder.index')->with('success', 'La encuesta ya fue contestada');
-        }
- 
-        if($preguntas[$index]->id_dependencia!=0){
-            $depende = $preguntas[$index]->id_dependencia;
-            $pregAct = $preguntas[$index]->id;
-            $pregAnt = $preguntas[$index-1]->id;
-            $respAnt = Respuesta::where('id_pregunta',$pregAnt)->where('id_usuario', $usuario)->pluck('id_alternativa');
-            $alter = Alternativa::where('id_pregunta',$pregAct)->where('id_dependencia', $respAnt)->get();    
-
-            $countAlter = count($alter);
-
-            if ($countAlter>0){
-                $preguntas[$index]->texto = $alter[0]->texto;
-                $preguntas[$index]->alternativas[0]->texto = "Si";
-                $preguntas[$index]->alternativas[0]->valor = 1;
-                $preguntas[$index]->alternativas[0]->id = $alter[0]->id;
-                $preguntas[$index]->alternativas[1]->texto = "No";
-                $preguntas[$index]->alternativas[1]->valor = 0;
-                $preguntas[$index]->alternativas[1]->id = $alter[0]->id;
-            } else {
-                Respuesta::create([
-                    'id_pregunta' => $pregAct,
-                    'id_alternativa' => 0,
-                    'id_usuario' => $usuario,
-                    'valor' => 0,
-                    'nivel' => $preguntas[$index]->id_subdimension,
-                ]);
-                $index = $index + 1;
-            }
-
-        }
-        // Si no hay más preguntas, redirigimos
-        if (!isset($preguntas[$index])) {
-            return redirect()->route('responder.index')->with('success', 'Gracias por responder la encuesta.');
-        }
-        $pregunta = $preguntas[$index];
-        return view('responder.mostrar', compact('encuesta', 'pregunta', 'index', 'totalPreguntas'));
-    }
-
-    public function guardar(Request $request)
-    {
-        $usuario = Auth::user()->id;
-        Respuesta::create([
-            'id_encuesta' => $request->id_encuesta,
-            'id_pregunta' => $request->id_pregunta,
-            'id_alternativa' => $request->id_alternativa,
-            'id_usuario' => $usuario,
-            'valor' => $request->valor,
-            'nivel' => $request->nivel,
-        ]);
-        // Aumentar el índice y redirigir
-        $siguienteIndex = $request->index + 1;
-        return response()->json([
-            'siguiente_url' => route('responder.mostrar', [
-                'idEncuesta' => $request->id_encuesta,
-                'index' => $siguienteIndex
-            ])
-        ]);
-    }
-    /**
-     * FIN
+     * Mostrar preguntas agrupadas por subdimension
      */
 
     public function mostrar($idEncuesta)
@@ -256,12 +158,20 @@ class ResponderController extends Controller
         foreach ($subdimensiones as $subdimension) {
             $subid = $subdimension->id;
 
+            /*
             $preguntas = Pregunta::select('preguntas.*','sd.nombre as subdimension')
                 ->leftJoin('subdimensiones as sd', 'sd.id', '=', 'preguntas.id_subdimension')
                 ->where('id_encuesta', 1)
                 ->where('sd.id',$subid)
                 ->orderBy('posicion', 'asc')
                 ->get();
+                */
+            $preguntas = Pregunta::where('id_encuesta', $idEncuesta)
+                ->where('id_subdimension', $subid)
+                ->with('alternativas') // Cargar las alternativas de cada pregunta
+                ->orderBy('posicion')   // Ordenar las preguntas por su posición
+                ->get();
+
             if ($preguntas->isNotEmpty()) {
                 $gruposDePreguntas->push([
                     'dimension' => $subdimension->dnombre,
@@ -273,7 +183,6 @@ class ResponderController extends Controller
                 ]);
             }
         }
-
         return view('responder.mostrar', [
             'encuesta' => $encuesta,
             'gruposDePreguntas' => $gruposDePreguntas,
