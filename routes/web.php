@@ -262,8 +262,7 @@ Route::middleware("auth")->group(function (){
         Route::get('/responder/{idEncuesta}', 'mostrar')->name('responder.mostrar');
         Route::post('/responder/guardar', 'guardar')->name('responder.guardar');
         Route::get('/responder/{id}/continuar','continuar')->name('responder.continuar');
-
-        Route::post('/responder/guardar-respuestas-grupo', 'guardarRespuestasGrupo')->name('responder.guardarRespuestasGrupo');
+        Route::post('/responder/guardar-respuestas-grupo','guardarRespuestasGrupo')->name('responder.guardarRespuestasGrupo');
     });
 
     Route::controller(IndiceMultiController::class)->group(function(){

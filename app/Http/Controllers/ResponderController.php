@@ -220,7 +220,7 @@ class ResponderController extends Controller
                         'id_alternativa' => null,
                         'valor' => null,          // Para el valor numérico de la alternativa
                         'respuesta_texto' => null, // Para la respuesta de texto (requiere columna en DB)
-                        // 'nivel' => null,       // Calcular si es necesario
+                        'nivel' => 0
                     ];
 
                     if (!empty($respuestaData['alternativa_id'])) {
@@ -234,14 +234,6 @@ class ResponderController extends Controller
                         // Asegúrate que esta columna exista en tu tabla 'respuestas' y sea TEXT/VARCHAR.
                         $datosAGuardar['respuesta_texto'] = $respuestaData['valor_texto'];
                     }
-                    
-                    // Lógica para el campo 'nivel' si es necesario. Ejemplo:
-                    // if ($datosAGuardar['valor'] !== null) {
-                    //    if ($datosAGuardar['valor'] >= 4) $datosAGuardar['nivel'] = 3; // Alto
-                    //    elseif ($datosAGuardar['valor'] >= 2) $datosAGuardar['nivel'] = 2; // Medio
-                    //    else $datosAGuardar['nivel'] = 1; // Bajo
-                    // }
-
 
                     Respuesta::updateOrCreate(
                         [

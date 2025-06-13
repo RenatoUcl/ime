@@ -362,7 +362,7 @@
                                                     <label class="alternativa-label">
                                                         <input type="radio"
                                                             name="respuestas[{{ $pregunta->id }}][alternativa_id]"
-                                                            value="{{ $alternativa->id }}"
+                                                            value="{{ $alternativa->valor }}"
                                                             onClick="habilitaDependencia({{ $pregunta->id }},{{ $alternativa->id }},{{ $index }})">
                                                         <span class="alternativa-texto">{!! $alternativa->texto !!}</span>
                                                     </label>
@@ -380,7 +380,7 @@
                                                     <span class="alternativa-texto">SI</span>
                                                 </label>
                                                 <label class="alternativa-label">
-                                                    <input type="radio" name="respuestas[{{ $pregunta->id }}][alternativa_id]" value="0">
+                                                    <input type="radio" name="respuestas[{{ $pregunta->id }}][alternativa_id]" value="0" checked>
                                                     <span class="alternativa-texto">NO</span>
                                                 </label>
                                             </div>
@@ -542,44 +542,19 @@
                 $(`.grupo-preguntas[data-group-index="${currentGroupIndex}"] .pregunta`).each(function() {
                     const preguntaId = $(this).data('pregunta-id');
                     const $radioChecked = $(this).find(`input[type="radio"][name="respuestas[${preguntaId}][alternativa_id]"]:checked`);
-                    const $textarea = $(this).find(`textarea[name="respuestas[${preguntaId}][valor_texto]"]`);
-                    const $checkboxesChecked = $(this).find(`input[type="checkbox"][name="respuestas[${preguntaId}][alternativas_seleccionadas][]"]:checked`);
-
-                    if ($radioChecked.length > 0) {
-                        respuestas.push({
-                            pregunta_id: preguntaId,
-                            alternativa_id: $radioChecked.val(),
-                            valor_texto: null
-                        });
-                    } else if ($textarea.length > 0 && $textarea.val().trim() !== '') {
-                        respuestas.push({
-                            pregunta_id: preguntaId,
-                            alternativa_id: null,
-                            valor_texto: $textarea.val().trim()
-                        });
-                    } else if ($checkboxesChecked.length > 0) {
-                        // Para checkboxes, podrías querer guardar cada selección como una respuesta separada
-                        // o enviar un array de IDs de alternativas. La estructura actual del backend
-                        // (updateOrCreate por pregunta) es más adecuada para una alternativa por respuesta.
-                        // Si una pregunta de checkbox puede tener múltiples respuestas,
-                        // necesitarás ajustar el backend y cómo se guardan.
-                        // Por ahora, enviaremos la primera seleccionada o podrías concatenar.
-                        // Este es un ejemplo simple, ajustar según necesidad:
-                        $checkboxesChecked.each(function() {
-                            respuestas.push({
-                                pregunta_id: preguntaId,
-                                alternativa_id: $(this).val(), // Guarda cada checkbox como una entrada de respuesta (requiere ajuste en backend si una pregunta solo tiene una fila en 'respuestas')
-                                                            // O enviar un array: 'alternativas_ids': $checkboxesChecked.map((_,el) => el.value).get()
-                                valor_texto: null
-                            });
-                        });
-                    }
+                    const $radioValue = $(this).find(`input[type="radio"][name="respuestas[${preguntaId}][alternativa_id]"]:checked`).val();
+                    respuestas.push({
+                        pregunta_id: preguntaId,
+                        alternativa_id: $radioChecked.val(),
+                        valor_texto: $radioValue
+                    });
                 });
                 return respuestas;
             }
 
             function saveGroupAnswers(callback) {
                 const respuestasData = collectAnswersForCurrentGroup();
+                console.log(respuestasData);
 
                 // Solo enviar AJAX si hay respuestas para guardar.
                 // Si el grupo no tenía preguntas o todas eran opcionales y no se respondieron,
@@ -592,6 +567,13 @@
                 }
 
                 $('#loading-indicator').removeClass('hidden');
+
+                const laData = {
+                        _token: $('input[name="_token"]').val(),
+                        encuesta_id: encuestaId,
+                        respuestas: respuestasData
+                    }
+                console.log(laData);
 
                 $.ajax({
                     url: '{{ route("responder.guardarRespuestasGrupo") }}',
@@ -606,7 +588,7 @@
                         if (response.success) {
                             if (callback) callback(true);
                         } else {
-                            alert('Error al guardar respuestas: ' + (response.message || 'Error desconocido.'));
+                            alert('11 Error al guardar respuestas: ' + (response.message || 'Error desconocido.'));
                             if (callback) callback(false);
                         }
                     },

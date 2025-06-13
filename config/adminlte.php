@@ -332,16 +332,6 @@ return [
             'route' => 'indice.index',
         ],
         [
-            'text' => 'Herramientas',
-            'url' => '#',
-            'icon' => 'fas fa-fw fa-tools',
-        ],
-        [
-            'text' => 'Mensajes',
-            'url' => '#',
-            'icon' => 'fas fa-fw fa-envelope',
-        ],
-        [
             'text' => 'Usuarios y Permisos',
             'icon' => 'fas fa-users',
             'submenu' => [
