@@ -158,14 +158,6 @@ class ResponderController extends Controller
         foreach ($subdimensiones as $subdimension) {
             $subid = $subdimension->id;
 
-            /*
-            $preguntas = Pregunta::select('preguntas.*','sd.nombre as subdimension')
-                ->leftJoin('subdimensiones as sd', 'sd.id', '=', 'preguntas.id_subdimension')
-                ->where('id_encuesta', 1)
-                ->where('sd.id',$subid)
-                ->orderBy('posicion', 'asc')
-                ->get();
-                */
             $preguntas = Pregunta::where('id_encuesta', $idEncuesta)
                 ->where('id_subdimension', $subid)
                 ->with('alternativas') // Cargar las alternativas de cada pregunta
@@ -227,7 +219,7 @@ class ResponderController extends Controller
                         $alternativa = Alternativa::find($respuestaData['alternativa_id']);
                         if ($alternativa) {
                             $datosAGuardar['id_alternativa'] = $alternativa->id;
-                            $datosAGuardar['valor'] = $alternativa->valor; // Asume que 'alternativas.valor' es el valor numérico
+                            $datosAGuardar['valor'] = $respuestaData['valor_texto']; // Asume que 'alternativas.valor' es el valor numérico
                         }
                     } elseif (isset($respuestaData['valor_texto'])) {
                         // Guarda el texto en la columna 'respuesta_texto'.

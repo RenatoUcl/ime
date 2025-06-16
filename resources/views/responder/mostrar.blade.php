@@ -350,9 +350,6 @@
                                     </div>
                                 </div>
                                 @foreach($grupo['preguntas'] as $pregunta)
-
-                                    
-
                                     @if($pregunta->tipo == 2)
                                         <div class="pregunta" data-pregunta-id="{{ $pregunta->id }}">
                                             <p class="pregunta-texto">{!! $pregunta->texto !!}</p>
@@ -507,24 +504,6 @@
                             answered = true;
                         }
                     }
-                    // Validación para textareas (asumimos que son obligatorias si existen)
-                    else if (preguntaDiv.find(`textarea[name="respuestas[${preguntaId}][valor_texto]"]`).length > 0) {
-                        if (preguntaDiv.find(`textarea[name="respuestas[${preguntaId}][valor_texto]"]`).val().trim() !== '') {
-                            answered = true;
-                        }
-                    }
-                    // Validación para checkboxes (al menos uno debe estar seleccionado)
-                    else if (preguntaDiv.find(`input[type="checkbox"][name="respuestas[${preguntaId}][alternativas_seleccionadas][]"]`).length > 0) {
-                        if (preguntaDiv.find(`input[type="checkbox"][name="respuestas[${preguntaId}][alternativas_seleccionadas][]"]:checked`).length > 0) {
-                            answered = true;
-                        }
-                    }
-                    // Añadir más validaciones para otros tipos de pregunta si es necesario
-                    else {
-                        // Si no es un tipo conocido para validar, asumimos que no requiere respuesta o es un error de configuración
-                        // answered = true; // O false si todos los tipos deben ser validados
-                    }
-
                     // Si la pregunta tiene alternativas o es un textarea, y no fue respondida, marcar como error
                     // (Esto asume que todas las preguntas son obligatorias. Ajustar si hay preguntas opcionales)
                     const hasInputs = preguntaDiv.find('input, textarea').length > 0;
@@ -542,13 +521,19 @@
                 $(`.grupo-preguntas[data-group-index="${currentGroupIndex}"] .pregunta`).each(function() {
                     const preguntaId = $(this).data('pregunta-id');
                     const $radioChecked = $(this).find(`input[type="radio"][name="respuestas[${preguntaId}][alternativa_id]"]:checked`);
-                    const $radioValue = $(this).find(`input[type="radio"][name="respuestas[${preguntaId}][alternativa_id]"]:checked`).val();
+                    if($radioChecked.val()==0){ 
+                        $radioChecked.val(1); 
+                        var $radioValue = "0";
+                    } else {
+                        var $radioValue = $(this).find(`input[type="radio"][name="respuestas[${preguntaId}][alternativa_id]"]:checked`).val();
+                    }
                     respuestas.push({
                         pregunta_id: preguntaId,
                         alternativa_id: $radioChecked.val(),
                         valor_texto: $radioValue
                     });
                 });
+                console.log(respuestas);
                 return respuestas;
             }
 
