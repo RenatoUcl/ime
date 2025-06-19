@@ -44,7 +44,7 @@
                                                     @csrf
                                                     @method('PUT')
                                                     <button type="submit" class="btn btn-danger btn-sm" onclick="event.preventDefault(); confirm('Are you sure to delete?') ? this.closest('form').submit() : false;"><i class="fa fa-fw fa-trash"></i> {{ __('Eliminar') }}</button>
-                                                    <a class="btn btn-sm btn-info" href="{{ route('role.mostrar',$role->id) }}"><i class="fa fa-fw fa-thumbs-up"></i> Permisos</a>
+                                                    <a class="btn btn-sm btn-info" href="{{ route('roles.permisos',$role->id) }}"><i class="fa fa-fw fa-thumbs-up"></i> Permisos</a>
                                                 </form>
                                             </td>
                                         </tr>

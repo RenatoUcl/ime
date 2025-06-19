@@ -65,10 +65,10 @@ class User extends Authenticatable
     /**
      * Verifica si el usuario tiene un permiso
      */
-    public function hasPermission($permission)
+    public function hasPermiso($nombrePermiso)
     {
-        foreach ($this->roles as $role) {
-            if ($role->permiso->contains('nombre', $permission)) {
+        foreach ($this->roles as $rol) {
+            if ($rol->permisos->contains('nombre', $nombrePermiso)) {
                 return true;
             }
         }

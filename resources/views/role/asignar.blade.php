@@ -15,16 +15,19 @@
                             <div class="form-group">
                                 <label for="permisos">Seleccionar Permisos</label>
                                 <select name="permisos[]" id="permisos" class="form-control" multiple>
+                                    @php
+                                        $permisosAsignados = $rol->permisos->pluck('id')->toArray();
+                                    @endphp
+
                                     @foreach ($permisos as $permiso)
                                         <option value="{{ $permiso->id }}" 
-                                            {{ in_array($permiso->id, optional($rol->permisos) ?? []) ? 'selected' : '' }}
+                                            {{ in_array($permiso->id, $permisosAsignados) ? 'selected' : '' }}>
                                             {{ $permiso->nombre }}
                                         </option>
                                     @endforeach
                                 </select>
                             </div>
                             <button type="submit" class="btn btn-success">Asignar Permisos</button>
-                        </form>
                         </form>
                     </div>
                 </div>

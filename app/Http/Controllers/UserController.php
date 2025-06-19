@@ -91,4 +91,21 @@ class UserController extends Controller
         return Redirect::route('usuarios.index')
             ->with('success', 'user deleted successfully');
     }
+
+    // Mostrar formulario para asignar roles
+    public function mostrarRoles($id)
+    {
+        $usuario = User::findOrFail($id);
+        $roles = \App\Models\Roles::all();
+        return view('usuario.roles', compact('usuario', 'roles'));
+    }
+
+    // Guardar asignación de roles
+    public function asignarRoles(Request $request, $id)
+    {
+        $usuario = User::findOrFail($id);
+        $usuario->roles()->sync($request->input('roles', [])); // array de IDs
+        return redirect()->route('usuarios.index')->with('success', 'Roles asignados correctamente.');
+    }
+
 }

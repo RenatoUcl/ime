@@ -50,6 +50,8 @@ Route::middleware("auth")->group(function (){
         Route::get('/usuarios/edit/{id}', 'edit')->name('usuarios.edit');
         Route::put('/usuarios/update/{id}', 'update')->name('usuarios.update');
         Route::delete('/usuarios/destroy/{id}', 'destroy')->name('usuarios.destroy');
+        Route::get('usuarios/{id}/roles', 'mostrarRoles')->name('usuarios.roles');
+        Route::post('usuarios/{id}/roles', 'asignarRoles')->name('usuarios.roles.asignar');
     });
 
     // Roles
@@ -62,7 +64,8 @@ Route::middleware("auth")->group(function (){
         Route::put('/roles/update/{id}', 'update')->name('role.update');
         Route::put('/roles/disabled/{id}', 'disabled')->name('role.disabled');
         Route::get('/roles/mostrar/{id}', 'mostrar')->name('role.mostrar');
-        Route::post('/roles/asignar/{id}', 'asignar')->name('role.asignar');
+        Route::put('/roles/asignar/{id}', 'asignar')->name('role.asignar');
+        Route::get('roles/{id}/permisos', 'verPermisos')->name('roles.permisos');
         //Route::delete('/roles/destroy/{id}', 'destroy')->name('role.destroy');
     });
 

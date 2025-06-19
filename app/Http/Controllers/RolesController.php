@@ -37,7 +37,7 @@ class RolesController extends Controller
         return $role;
     }
 
-    public function update(Request $request, Role $role)
+    public function update(Request $request, Roles $role)
     {
         $role->update($request->only(['nombre', 'descripcion']));
         if ($request->has('permissions')) {
@@ -93,4 +93,11 @@ class RolesController extends Controller
         return Redirect::route('role.index')
                ->with('success', 'Permisos asignados correctamente al rol');
     }
+
+    public function verPermisos($id): View
+    {
+        $rol = \App\Models\Roles::with('permisos')->findOrFail($id);
+        return view('role.permisos', compact('rol'));
+    }
+
 }

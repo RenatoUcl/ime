@@ -19,11 +19,11 @@ return new class extends Migration
         Schema::create('roles_usuarios', function (Blueprint $table) {
             $table->foreignId('id_user')
                 ->references('id')
-                ->on('roles')
+                ->on('users')
                 ->unique();
             $table->foreignId('id_rol')
                 ->references('id')
-                ->on('users');
+                ->on('roles');
             $table->timestamps();
         });
     }
