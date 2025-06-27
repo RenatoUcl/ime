@@ -35,6 +35,7 @@
                         DIMENSIONES
                     </div>
                     <div class="card-body" id="contenedor-tabla"></div>
+                    <div class="card-footer" id="resumen"></div>
             </div>
         </div>
     </div>
@@ -61,27 +62,28 @@
         function CargaGrafico(){
             var encuesta = document.getElementById('equipo').value;
             const valDimensiones = @json($valDimensiones);
-            const valSubdimensiones = @json($valSubdimensiones);
-            const valPreguntas = @json($valPreguntas);
 
             let dimensiones = [];
             let valores = [];
             let encuestaAct = "";
+            var promedio = parseFloat(0);
+            const rutaDetalle = `{{ route('indice.detalle', [':encuesta', ':dimension']) }}`;
+
             valDimensiones.forEach(valDimensiones => {
                 if(valDimensiones.id_encuesta==encuesta){
                     encuestaAct = valDimensiones.id_encuesta;
                     dimensiones.push(valDimensiones.nombre);
                     valores.push(valDimensiones.promedio);
+                    promedio += parseFloat(valDimensiones.promedio);
+                    console.log(promedio);
                 }
             });
+
+            promedio = promedio/8;
 
             tabla = document.getElementById('contenedor-tabla');
             tabla.innerHTML = "";
 
-            console.log("paso");
-
-            console.log("valdimension.idencuesta = " + encuestaAct);
-            console.log("encuesta = " + encuesta);
             if(encuestaAct==encuesta){
                 let tablaHTML = `
                 <table class="table">
@@ -90,12 +92,13 @@
                         <th scope="col">Dimensión</th>
                         <th scope="col">Promedio</th>
                         <th scope="col">Efectividad</th>
-                        <th scope="col">Acciones</th>
+                        <th scope="col"></th>
                         </tr>
                     </thead>`;
                 var color = "";
                 var msje  = "";
                 valDimensiones.forEach(d => {
+                    let idDim = d.id_dimension;
                     if(d.id_encuesta==encuesta){
                         if (d.promedio < 5) {
                             color = "bg-danger";
@@ -107,12 +110,15 @@
                             color = "bg-success";
                             msje  = "Máxima Efectividad";
                         }
+                    let urlDetalle = rutaDetalle
+                        .replace(':encuesta', encuestaAct)
+                        .replace(':dimension', idDim); 
                     tablaHTML += `
-                        <tr class="` + color + `">
+                        <tr class="${color}">
                             <td>${d.nombre}</td>
                             <td>${d.promedio}</td>
                             <td>` + msje + `</td>
-                            <td></td>
+                            <td><a href="${urlDetalle}" class="text-white"><i class="fas fa-search-plus" title="Ver Detalle"></i></a></td>
                         </tr>
                     `;
                     }
@@ -156,6 +162,11 @@
                     }
                 }
             });
+
+            // Resumen
+            const resumen = document.getElementById('resumen');
+            resumen.innerHTML = "";
+            resumen.innerHTML = '<div class="msjPromedio"><h1>Promedio: ' + promedio.toFixed(2) + '</h1></div>';
         }
     </script>
 @endsection

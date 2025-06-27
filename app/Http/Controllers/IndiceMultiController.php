@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Dimension;
 use App\Models\LineasProgramaticas;
 use App\Models\Encuesta;
 use App\Models\VistaResultadosDimension;
@@ -16,10 +17,13 @@ class IndiceMultiController extends Controller
         $lineas = LineasProgramaticas::all();
         $encuestas = Encuesta::all();
         $valDimensiones = VistaResultadosDimension::all();
-        $valSubdimensiones = VistaResultadosSubdimension::all();
-        $valPreguntas = VistaResultadosPregunta::all();
-
-        return view('indice.index',compact('lineas','encuestas','valDimensiones','valSubdimensiones','valPreguntas'));
-
+        return view('indice.index',compact('lineas','encuestas','valDimensiones'));
+    }
+    public function detalle($idEncuesta, $idDimension)
+    {
+        $valSubdimensiones = VistaResultadosSubdimension::where('id_encuesta',$idEncuesta)
+            ->where('id_dimension', $idDimension)
+            ->get();
+        return view('indice.detalle',compact('valSubdimensiones'));
     }
 }

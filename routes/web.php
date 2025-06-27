@@ -270,7 +270,7 @@ Route::middleware("auth")->group(function (){
 
     Route::controller(IndiceMultiController::class)->group(function(){
         Route::get('/indice','index')->name('indice.index');
-        Route::get('/indice/show/{id}', 'show')->name('indice.show');
+        Route::get('/indice/{idEncuesta}/{idDimension}', 'detalle')->name('indice.detalle');
     });
     /*
     // BASE
