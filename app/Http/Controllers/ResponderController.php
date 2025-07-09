@@ -128,6 +128,9 @@ class ResponderController extends Controller
 
     public function mostrar($idEncuesta)
     {
+        $loger = auth()->user()->load('roles');
+        $permiso = $loger->roles->pluck('nombre');
+        
         $encuesta = Encuesta::findOrFail($idEncuesta);
         $usuario = Auth::user()->id;
         $registro = EncuestasUsuario::where('id_encuesta',$idEncuesta)
@@ -139,19 +142,216 @@ class ResponderController extends Controller
                 'id_usuario'  => $usuario,
             ]);
         }
-        $subdimensiones = Pregunta::join('subdimensiones as sd', 'sd.id', '=', 'preguntas.id_subdimension')
-            ->leftJoin('dimensiones as d', 'd.id', '=', 'sd.id_dimension')
-            ->where('preguntas.id_encuesta', 1)
-            ->select([
-                'sd.id',
-                'd.id as did',
-                'd.nombre as dnombre',
-                'd.descripcion as ddescrip',
-                'preguntas.id_subdimension',
-                'sd.nombre'
-            ])
-            ->distinct()
-            ->get();
+
+        switch ($permiso[0]) {
+            case 'Hospital_1':
+                $subdimensiones = Pregunta::join('subdimensiones as sd', 'sd.id', '=', 'preguntas.id_subdimension')
+                    ->leftJoin('dimensiones as d', 'd.id', '=', 'sd.id_dimension')
+                    ->where('preguntas.id_encuesta', $idEncuesta)
+                    ->where(function ($query) {
+                        $query->where('d.id', 3)
+                            ->orWhere('d.id', 8);
+                    })
+                    ->select([
+                        'sd.id',
+                        'd.id as did',
+                        'd.nombre as dnombre',
+                        'd.descripcion as ddescrip',
+                        'preguntas.id_subdimension',
+                        'sd.nombre'
+                    ])
+                    ->distinct()
+                    ->get();
+                break;
+            case 'Hospital_2':
+                $subdimensiones = Pregunta::join('subdimensiones as sd', 'sd.id', '=', 'preguntas.id_subdimension')
+                    ->leftJoin('dimensiones as d', 'd.id', '=', 'sd.id_dimension')
+                    ->where('preguntas.id_encuesta', $idEncuesta)
+                    ->where(function ($query) {
+                        $query->where('d.id', 1)
+                            ->orWhere('d.id', 5);
+                    })
+                    ->select([
+                        'sd.id',
+                        'd.id as did',
+                        'd.nombre as dnombre',
+                        'd.descripcion as ddescrip',
+                        'preguntas.id_subdimension',
+                        'sd.nombre'
+                    ])
+                    ->distinct()
+                    ->get();
+                break;
+            case 'Hospital_3':
+                 $subdimensiones = Pregunta::join('subdimensiones as sd', 'sd.id', '=', 'preguntas.id_subdimension')
+                    ->leftJoin('dimensiones as d', 'd.id', '=', 'sd.id_dimension')
+                    ->where('preguntas.id_encuesta', $idEncuesta)
+                    ->where(function ($query) {
+                        $query->where('d.id', 2)
+                            ->orWhere('d.id', 5);
+                    })
+                    ->select([
+                        'sd.id',
+                        'd.id as did',
+                        'd.nombre as dnombre',
+                        'd.descripcion as ddescrip',
+                        'preguntas.id_subdimension',
+                        'sd.nombre'
+                    ])
+                    ->distinct()
+                    ->get();
+                break;
+            case 'Hospital_4':
+                $subdimensiones = Pregunta::join('subdimensiones as sd', 'sd.id', '=', 'preguntas.id_subdimension')
+                    ->leftJoin('dimensiones as d', 'd.id', '=', 'sd.id_dimension')
+                    ->where('preguntas.id_encuesta', $idEncuesta)
+                    ->where(function ($query) {
+                        $query->where('d.id', 5)
+                            ->orWhere('d.id', 7);
+                    })
+                    ->select([
+                        'sd.id',
+                        'd.id as did',
+                        'd.nombre as dnombre',
+                        'd.descripcion as ddescrip',
+                        'preguntas.id_subdimension',
+                        'sd.nombre'
+                    ])
+                    ->distinct()
+                    ->get();
+                break;
+            case 'Hospital_5':
+                $subdimensiones = Pregunta::join('subdimensiones as sd', 'sd.id', '=', 'preguntas.id_subdimension')
+                    ->leftJoin('dimensiones as d', 'd.id', '=', 'sd.id_dimension')
+                    ->where('preguntas.id_encuesta', $idEncuesta)
+                    ->where('d.id',6)
+                    ->select([
+                        'sd.id',
+                        'd.id as did',
+                        'd.nombre as dnombre',
+                        'd.descripcion as ddescrip',
+                        'preguntas.id_subdimension',
+                        'sd.nombre'
+                    ])
+                    ->distinct()
+                    ->get();
+                break;
+            case 'Hospital_6':
+                $subdimensiones = Pregunta::join('subdimensiones as sd', 'sd.id', '=', 'preguntas.id_subdimension')
+                    ->leftJoin('dimensiones as d', 'd.id', '=', 'sd.id_dimension')
+                    ->where('preguntas.id_encuesta', $idEncuesta)
+                    ->where('d.id',2)
+                    ->select([
+                        'sd.id',
+                        'd.id as did',
+                        'd.nombre as dnombre',
+                        'd.descripcion as ddescrip',
+                        'preguntas.id_subdimension',
+                        'sd.nombre'
+                    ])
+                    ->distinct()
+                    ->get();
+                break;
+            // OPCION
+            case 'direccion_ejecutiva':
+                $subdimensiones = Pregunta::join('subdimensiones as sd', 'sd.id', '=', 'preguntas.id_subdimension')
+                    ->leftJoin('dimensiones as d', 'd.id', '=', 'sd.id_dimension')
+                    ->where('preguntas.id_encuesta', $idEncuesta)
+                    ->where(function ($query) {
+                        $query->where('d.id', 3)
+                            ->orWhere('d.id', 4)
+                            ->orWhere('d.id', 8);
+                    })
+                    ->select([
+                        'sd.id',
+                        'd.id as did',
+                        'd.nombre as dnombre',
+                        'd.descripcion as ddescrip',
+                        'preguntas.id_subdimension',
+                        'sd.nombre'
+                    ])
+                    ->distinct()
+                    ->get();
+                break;
+            case 'coordinadores':
+            case 'director':
+                $subdimensiones = Pregunta::join('subdimensiones as sd', 'sd.id', '=', 'preguntas.id_subdimension')
+                    ->leftJoin('dimensiones as d', 'd.id', '=', 'sd.id_dimension')
+                    ->where('preguntas.id_encuesta', $idEncuesta)
+                    ->select([
+                        'sd.id',
+                        'd.id as did',
+                        'd.nombre as dnombre',
+                        'd.descripcion as ddescrip',
+                        'preguntas.id_subdimension',
+                        'sd.nombre'
+                    ])
+                    ->distinct()
+                    ->get();
+                break;
+            case 'coordinador_tecnico':
+                $subdimensiones = Pregunta::join('subdimensiones as sd', 'sd.id', '=', 'preguntas.id_subdimension')
+                    ->leftJoin('dimensiones as d', 'd.id', '=', 'sd.id_dimension')
+                    ->where('preguntas.id_encuesta', $idEncuesta)
+                    ->where(function ($query) {
+                        $query->where('d.id', 1)
+                            ->orWhere('d.id', 2)
+                            ->orWhere('d.id', 3)
+                            ->orWhere('d.id', 4)
+                            ->orWhere('d.id', 6)
+                            ->orWhere('d.id', 7);
+                    })
+                    ->select([
+                        'sd.id',
+                        'd.id as did',
+                        'd.nombre as dnombre',
+                        'd.descripcion as ddescrip',
+                        'preguntas.id_subdimension',
+                        'sd.nombre'
+                    ])
+                    ->distinct()
+                    ->get();
+                break;
+            case 'profesional':
+                $subdimensiones = Pregunta::join('subdimensiones as sd', 'sd.id', '=', 'preguntas.id_subdimension')
+                    ->leftJoin('dimensiones as d', 'd.id', '=', 'sd.id_dimension')
+                    ->where('preguntas.id_encuesta', $idEncuesta)
+                    ->where(function ($query) {
+                        $query->where('d.id', 1)
+                            ->orWhere('d.id', 2)
+                            ->orWhere('d.id', 3)
+                            ->orWhere('d.id', 4);
+                    })
+                    ->select([
+                        'sd.id',
+                        'd.id as did',
+                        'd.nombre as dnombre',
+                        'd.descripcion as ddescrip',
+                        'preguntas.id_subdimension',
+                        'sd.nombre'
+                    ])
+                    ->distinct()
+                    ->get();
+                break;
+            default:
+                $subdimensiones = Pregunta::join('subdimensiones as sd', 'sd.id', '=', 'preguntas.id_subdimension')
+                    ->leftJoin('dimensiones as d', 'd.id', '=', 'sd.id_dimension')
+                    ->where('preguntas.id_encuesta', $idEncuesta)
+                    ->select([
+                        'sd.id',
+                        'd.id as did',
+                        'd.nombre as dnombre',
+                        'd.descripcion as ddescrip',
+                        'preguntas.id_subdimension',
+                        'sd.nombre'
+                    ])
+                    ->distinct()
+                    ->get();
+            
+                break;
+        }
+
+        
 
         $gruposDePreguntas = collect();
         

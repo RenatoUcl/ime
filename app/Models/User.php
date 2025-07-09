@@ -62,6 +62,7 @@ class User extends Authenticatable
         return $this->roles->contains('nombre', $role);
     }
 
+
     /**
      * Verifica si el usuario tiene un permiso
      */

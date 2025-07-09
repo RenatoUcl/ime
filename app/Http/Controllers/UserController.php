@@ -3,12 +3,14 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Models\Roles;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use App\Http\Requests\UserRequest;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\View\View;
+use Illuminate\Support\Facades\Auth;
 
 class UserController extends Controller
 {
@@ -17,6 +19,11 @@ class UserController extends Controller
      */
     public function index(Request $request): View
     {
+        $user = auth()->user()->load('roles');
+        if (!$user->hasRole('admin')) {
+            abort(403, 'No tienes permiso para acceder a esta sección.');
+        }
+
         $users = User::paginate();
 
         return view('usuarios.index', compact('users'))
@@ -96,15 +103,22 @@ class UserController extends Controller
     public function mostrarRoles($id)
     {
         $usuario = User::findOrFail($id);
-        $roles = \App\Models\Roles::all();
-        return view('usuario.roles', compact('usuario', 'roles'));
+        $roles = Roles::all();
+        return view('usuarios.roles', compact('usuario', 'roles'));
     }
 
     // Guardar asignación de roles
     public function asignarRoles(Request $request, $id)
     {
         $usuario = User::findOrFail($id);
-        $usuario->roles()->sync($request->input('roles', [])); // array de IDs
+
+        //dd($request->toArray());
+
+        $usuario->roles()->sync($request->input('rol'));
+
+        //dd($request->input('rol'), $usuario->roles()->pluck('id')->toArray());
+
+
         return redirect()->route('usuarios.index')->with('success', 'Roles asignados correctamente.');
     }
 

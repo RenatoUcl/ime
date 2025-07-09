@@ -42,6 +42,7 @@
                                         <td>
                                             <a class="btn btn-sm btn-primary" href="{{ route('usuarios.show', $user->id) }}"><i class="fa fa-fw fa-eye"></i> Ver</a>
                                             <a class="btn btn-sm btn-success" href="{{ route('usuarios.edit', $user->id) }}"><i class="fa fa-fw fa-edit"></i> Editar</a>
+                                            <a class="btn btn-sm btn-secondary" href="{{ route('usuarios.roles', $user->id) }}"><i class="fas fa-user-lock"></i> Roles</a>
                                         </td>
                                     </tr>
                                     @endforeach

@@ -32,7 +32,8 @@ Route::middleware("guest")->group(function (){
 
 Route::middleware("auth")->group(function (){
     // Registro
-    Route::get('/registro',[AuthController::class, 'registro'])->name('registro');
+    Route::get('/registro',[AuthController::class, 'registro'])
+        ->name('registro');
     Route::post('/registrar',[AuthController::class, 'registrar'])->name('registrar');
 
     // Home & Dashboard

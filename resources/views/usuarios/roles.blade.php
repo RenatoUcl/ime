@@ -1,37 +1,34 @@
 @extends('adminlte::page')
 
-@section('title','Roles')
-
 @section('content')
-<div class="container">
-    <h2>Asignar roles al usuario: {{ $usuario->nombre }} {{ $usuario->ap_paterno }}</h2>
+<section class="content container-fluid">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card card-primary card-default mt-3">
+                <div class="card-header">
+                    <span class="card-title">Asignar rol al usuario: {{ $usuario->nombre }} {{ $usuario->ap_paterno }}</span>
+                </div>
+                <div class="card-body bg-white">
+                    <form action="{{ route('usuarios.roles.asignar', $usuario->id) }}" method="POST">
+                        @csrf
 
-    @if (session('success'))
-        <div style="color: green">{{ session('success') }}</div>
-    @endif
+                        @foreach($roles as $rol)
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="rol" value="{{ $rol->id }}"
+                                    id="rol_{{ $rol->id }}"
+                                    {{ $usuario->roles->first()?->id === $rol->id ? 'checked' : '' }}>
+                                        <label class="form-check-label" for="rol_{{ $rol->id }}">
+                                    {{ $rol->nombre }}
+                                </label>
+                            </div>
+                        @endforeach
 
-    <form action="{{ route('usuarios.roles.asignar', $usuario->id) }}" method="POST">
-        @csrf
-
-        <div>
-            <label>Roles disponibles:</label>
-            <div style="margin-left: 15px;">
-                @foreach($roles as $rol)
-                    <div>
-                        <label>
-                            <input type="checkbox" name="roles[]" value="{{ $rol->id }}"
-                                {{ $usuario->roles->contains($rol->id) ? 'checked' : '' }}>
-                            {{ $rol->nombre }}
-                        </label>
-                    </div>
-                @endforeach
+                        <button type="submit" class="btn btn-primary mt-3">Guardar</button>
+                        <a href="{{ route('usuarios.index') }}" class="btn btn-secondary mt-3">Volver</a>
+                    </form>
+                </div>
             </div>
         </div>
-
-        <br>
-        <button type="submit">Guardar cambios</button>
-        <a href="{{ route('usuarios.index') }}">Volver</a>
-    </form>
-</div>
+    </div>
+</section>
 @endsection
-
