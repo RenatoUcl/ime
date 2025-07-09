@@ -8,11 +8,17 @@ use Illuminate\Http\Request;
 use App\Http\Requests\LineasProgramaticasRequest;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\View\View;
+use Illuminate\Support\Facades\Auth;
 
 class LineasProgramaticasController extends Controller
 {
     public function index(Request $request): View
     {
+        $user = Auth::user()->load('roles');
+        if (!$user->hasRole('admin')) {
+            abort(403, 'No tienes permiso para acceder a esta sección.');
+        }
+
         $lineas = LineasProgramaticas::paginate();
         return view('linea.index', compact('lineas'))
             ->with('i', ($request->input('page', 1) - 1) * $lineas->perPage());

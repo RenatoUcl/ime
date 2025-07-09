@@ -17,6 +17,11 @@ class RolesController extends Controller
 {
     public function index(Request $request): View
     {
+        $user = auth()->user()->load('roles');
+        if (!$user->hasRole('admin')) {
+            abort(403, 'No tienes permiso para acceder a esta sección.');
+        }
+        
         $roles = Roles::paginate();
         return view('role.index', compact('roles'))
             ->with('i', ($request->input('page', 1) - 1) * $roles->perPage());

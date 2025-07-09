@@ -8,11 +8,17 @@ use Illuminate\Http\Request;
 use App\Http\Requests\SubdimensionRequest;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\View\View;
+use Illuminate\Support\Facades\Auth;
 
 class SubdimensionController extends Controller
 {
     public function index(Request $request): View
     {
+        $user = Auth::user()->load('roles');
+        if (!$user->hasRole('admin')) {
+            abort(403, 'No tienes permiso para acceder a esta sección.');
+        }
+
         //$subdimensiones = Subdimension::paginate();
         $subdimensiones = Subdimension::select(
             'subdimensiones.id',

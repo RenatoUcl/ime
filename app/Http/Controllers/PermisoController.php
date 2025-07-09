@@ -8,11 +8,16 @@ use Illuminate\Http\Request;
 use App\Http\Requests\PermisoRequest;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\View\View;
+use Illuminate\Support\Facades\Auth;
 
 class PermisoController extends Controller
 {
     public function index(Request $request): View
     {
+        $user = Auth::user()->load('roles');
+        if (!$user->hasRole('admin')) {
+            abort(403, 'No tienes permiso para acceder a esta sección.');
+        }
         $permisos = Permiso::paginate();
         return view('permiso.index', compact('permisos'))
             ->with('i', ($request->input('page', 1) - 1) * $permisos->perPage());

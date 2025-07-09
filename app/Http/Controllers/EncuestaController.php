@@ -17,6 +17,7 @@ use Illuminate\Http\Request;
 
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Carbon;
 use Illuminate\View\View;
 
@@ -25,6 +26,10 @@ class EncuestaController extends Controller
 
     public function index(Request $request): View
     {
+        $user = Auth::user()->load('roles');
+        if (!$user->hasRole('admin')) {
+            abort(403, 'No tienes permiso para acceder a esta sección.');
+        }
         $encuestas = Encuesta::paginate();
 
         return view('encuesta.index', compact('encuestas'))
