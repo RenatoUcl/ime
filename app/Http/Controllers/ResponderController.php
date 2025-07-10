@@ -347,11 +347,8 @@ class ResponderController extends Controller
                     ])
                     ->distinct()
                     ->get();
-            
                 break;
         }
-
-        
 
         $gruposDePreguntas = collect();
         
