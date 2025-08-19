@@ -34,24 +34,21 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    @foreach ($encuestas as $encuesta)
+                                    @foreach ($encuestas as $encuesta)                                        
                                         <tr>
                                             <td>{{ $encuesta->id }}</td>
                                             <td>{{ $encuesta->nombre }}</td>
                                             <td>{!! $encuesta->descripcion !!}</td>
                                             <td>{{ $encuesta->created_at->format('d/m/Y') }}</td>
                                             @if ($encuesta->estado == true)
-                                                <td>
-                                                    <span class="btn btn-sm btn-success">Activo</span>
-                                                </td>
-                                                <td>
-                                                    <a class="btn btn-sm btn-primary" href="{{ route('responder.mostrar', $encuesta->id) }}"><i class="fa fa-fw fa-eye"></i> Responder</a>
-                                                </td>
+                                                <td><span class="btn btn-sm btn-success">Activo</span></td>
+                                                <td><a class="btn btn-sm btn-primary" href="{{ route('responder.mostrar', $encuesta->id) }}"><i class="fa fa-fw fa-eye"></i> Responder</a></td>
                                             @else
                                                 <td><span class="btn btn-sm btn-warning">Inactivo</span></td>
                                                 <td></td>
                                             @endif
                                         </tr>
+                                        
                                     @endforeach
                                 </tbody>
                             </table>

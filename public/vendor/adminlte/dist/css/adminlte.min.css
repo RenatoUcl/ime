@@ -17,3 +17,7 @@
 .card-segunda {
     background-color: lightblue !important;
 }
+
+.img-circle {
+  border-radius: 0% !important;
+}

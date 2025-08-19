@@ -28,7 +28,7 @@ class EncuestasUsuario extends Model
      *
      * @var array<int, string>
      */
-    protected $fillable = ['id_encuesta', 'id_usuario'];
+    protected $fillable = ['id_encuesta', 'id_usuario','ultima_pregunta_id','completado'];
 
 
     /**

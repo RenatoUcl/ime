@@ -26,14 +26,14 @@ class ResponderController extends Controller
 {
     public function index(Request $request): View
     {
-        $iduser = Auth::user()->id;
-        $respondido = EncuestasUsuario::select('id_encuesta')->where('id_usuario',$iduser)->get();
-        foreach($respondido as $item){
-            $excluir[] = $item->id_encuesta;
-        }
+        $User = Auth::user();
+        $idUser = $User->id; 
+        $rolUser = $User->load('roles');
+        $rolUser = $rolUser->roles()->pluck('nombre')->first();
+
+        
         $encuestas = Encuesta::all();
-        return view('responder.index', compact('encuestas','respondido'));
-            //->with('i', ($request->input('page', 1) - 1) * $encuestas->perPage());
+        return view('responder.index', compact('encuestas'));
     }
 
     public function show($id): View
@@ -102,7 +102,7 @@ class ResponderController extends Controller
         }
 
         foreach($preguntas as $preg){
-            $preg->id;
+            
             $alter = "respuesta".$preg->id;
             $dat = explode('|',$request->$alter);
             $respuesta = new Respuesta();
@@ -111,12 +111,16 @@ class ResponderController extends Controller
             $respuesta->valor = $dat[1];
             $respuesta->nivel = '1';
             $respuesta->save();
-        }
 
-        $responde = new EncuestasUsuario();
-        $responde->id_encuesta = $id_encuesta;
-        $responde->id_usuario = Auth::user()->id;
-        $responde->save();
+            /*
+            $responde = new EncuestasUsuario();
+            $responde->id_encuesta = $id_encuesta;
+            $responde->id_usuario = Auth::user()->id;
+            $responde->ultima_pregunta_id = $preg->id;
+            $responde->completado=0;
+            $responde->save();
+            */
+        }
 
         return Redirect::route('responder.index')
             ->with('success', 'Respuesta created successfully.');
@@ -128,7 +132,7 @@ class ResponderController extends Controller
 
     public function mostrar($idEncuesta)
     {
-        $loger = auth()->user()->load('roles');
+        $loger = Auth::user()->load('roles');
         $permiso = $loger->roles->pluck('nombre');
         
         $encuesta = Encuesta::findOrFail($idEncuesta);
@@ -140,6 +144,7 @@ class ResponderController extends Controller
             EncuestasUsuario::create([
                 'id_encuesta' => $idEncuesta,
                 'id_usuario'  => $usuario,
+                'ultima_pregunta_id' => 1,
             ]);
         }
 
@@ -391,8 +396,6 @@ class ResponderController extends Controller
 
         $userId = Auth::id();
         if (!$userId) {
-            // Considera si permitir respuestas anónimas o requerir inicio de sesión.
-            // Si se permiten anónimas, necesitarás una forma de identificar al encuestado (ej. session ID).
             return response()->json(['success' => false, 'message' => 'Usuario no autenticado.'], 401);
         }
 
@@ -402,28 +405,23 @@ class ResponderController extends Controller
                 foreach ($validatedData['respuestas'] as $respuestaData) {
                     $pregunta = Pregunta::find($respuestaData['pregunta_id']);
                     if (!$pregunta) {
-                        continue; // Saltar si la pregunta no existe
+                        continue;
                     }
-
                     $datosAGuardar = [
                         'id_alternativa' => null,
-                        'valor' => null,          // Para el valor numérico de la alternativa
-                        'respuesta_texto' => null, // Para la respuesta de texto (requiere columna en DB)
+                        'valor' => null,
+                        'respuesta_texto' => null,
                         'nivel' => 0
                     ];
-
                     if (!empty($respuestaData['alternativa_id'])) {
                         $alternativa = Alternativa::find($respuestaData['alternativa_id']);
                         if ($alternativa) {
                             $datosAGuardar['id_alternativa'] = $alternativa->id;
-                            $datosAGuardar['valor'] = $respuestaData['valor_texto']; // Asume que 'alternativas.valor' es el valor numérico
+                            $datosAGuardar['valor'] = $respuestaData['valor_texto'];
                         }
                     } elseif (isset($respuestaData['valor_texto'])) {
-                        // Guarda el texto en la columna 'respuesta_texto'.
-                        // Asegúrate que esta columna exista en tu tabla 'respuestas' y sea TEXT/VARCHAR.
                         $datosAGuardar['respuesta_texto'] = $respuestaData['valor_texto'];
                     }
-
                     Respuesta::updateOrCreate(
                         [
                             'id_encuesta' => $validatedData['encuesta_id'],
@@ -431,6 +429,10 @@ class ResponderController extends Controller
                             'id_usuario' => $userId,
                         ],
                         $datosAGuardar
+                    );
+                    EncuestasUsuario::where('id_encuesta', $validatedData['encuesta_id'])
+                        ->where('id_usuario', $userId)
+                        ->update(['ultima_pregunta_id' => $respuestaData['pregunta_id']]
                     );
                 }
             }

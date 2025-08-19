@@ -533,13 +533,13 @@
                         valor_texto: $radioValue
                     });
                 });
-                console.log(respuestas);
+                //console.log(respuestas);
                 return respuestas;
             }
 
             function saveGroupAnswers(callback) {
                 const respuestasData = collectAnswersForCurrentGroup();
-                console.log(respuestasData);
+                //console.log(respuestasData);
 
                 // Solo enviar AJAX si hay respuestas para guardar.
                 // Si el grupo no tenía preguntas o todas eran opcionales y no se respondieron,
@@ -558,7 +558,7 @@
                         encuesta_id: encuestaId,
                         respuestas: respuestasData
                     }
-                console.log(laData);
+                //console.log(laData);
 
                 $.ajax({
                     url: '{{ route("responder.guardarRespuestasGrupo") }}',
@@ -589,7 +589,7 @@
                             } catch (e) { /* no hacer nada si no es JSON */ }
                         }
                         alert(errorMsg);
-                        console.error("Error guardando respuestas: ", xhr);
+                        //console.error("Error guardando respuestas: ", xhr);
                         if (callback) callback(false);
                     }
                 });

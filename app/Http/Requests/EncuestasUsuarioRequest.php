@@ -24,6 +24,8 @@ class EncuestasUsuarioRequest extends FormRequest
         return [
 			'id_encuesta' => 'required',
 			'id_usuario' => 'required',
+            'ultima_pregunta_id' => 'nullable|integer',
+            'completado' => 'nullable|boolean',
         ];
     }
 }
