@@ -112,7 +112,7 @@
                 let idDim = d.id_dimension;
                 if (d.promedio < 5) {
                     color = "bg-danger";
-                    msje  = "Critico";
+                    msje  = "Alerta";
                 } else if (d.promedio < 7.5){
                     color = "bg-warning";
                     msje  = "Minimo Funcional";
