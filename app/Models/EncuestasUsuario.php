@@ -20,6 +20,7 @@ use Illuminate\Database\Eloquent\Model;
  */
 class EncuestasUsuario extends Model
 {
+    protected $table = 'encuestas_usuarios';
     
     protected $perPage = 20;
 

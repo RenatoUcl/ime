@@ -30,7 +30,6 @@ class ResponderController extends Controller
         $idUser = $User->id; 
         $rolUser = $User->load('roles');
         $rolUser = $rolUser->roles()->pluck('nombre')->first();
-
         
         $encuestas = Encuesta::all();
         return view('responder.index', compact('encuestas'));
@@ -145,6 +144,18 @@ class ResponderController extends Controller
                 'id_encuesta' => $idEncuesta,
                 'id_usuario'  => $usuario,
                 'ultima_pregunta_id' => 1,
+            ]);
+        }
+
+        $avance = EncuestasUsuario::where('id_encuesta', $idEncuesta)
+            ->where('id_usuario', $usuario)
+            ->value('ultimo_grupo');
+
+        // Si el usuario ya había avanzado, enviarlo directamente al grupo correspondiente
+        if ($avance > 1) {
+            return redirect()->route('responder.mostrarGrupo', [
+                'id_encuesta' => $idEncuesta,
+                'grupo' => $avance
             ]);
         }
 
@@ -362,8 +373,8 @@ class ResponderController extends Controller
 
             $preguntas = Pregunta::where('id_encuesta', $idEncuesta)
                 ->where('id_subdimension', $subid)
-                ->with('alternativas') // Cargar las alternativas de cada pregunta
-                ->orderBy('posicion')   // Ordenar las preguntas por su posición
+                ->with(['alternativas', 'respuestaUsuario'])    // Cargar las alternativas de cada pregunta
+                ->orderBy('posicion')                           // Ordenar las preguntas por su posición
                 ->get();
 
             if ($preguntas->isNotEmpty()) {
@@ -437,6 +448,13 @@ class ResponderController extends Controller
                 }
             }
             DB::commit();
+
+            EncuestasUsuario::where('id_encuesta', $validatedData['encuesta_id'])
+                ->where('id_usuario', $userId)
+                ->update([
+                    'ultimo_grupo' => $request->grupo_actual,
+                ]);
+
             return response()->json(['success' => true, 'message' => 'Respuestas guardadas correctamente.']);
         } catch (\Exception $e) {
             DB::rollBack();

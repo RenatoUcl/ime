@@ -42,7 +42,24 @@
                                             <td>{{ $encuesta->created_at->format('d/m/Y') }}</td>
                                             @if ($encuesta->estado == true)
                                                 <td><span class="btn btn-sm btn-success">Activo</span></td>
-                                                <td><a class="btn btn-sm btn-primary" href="{{ route('responder.mostrar', $encuesta->id) }}"><i class="fa fa-fw fa-eye"></i> Responder</a></td>
+                                                <td>
+                                                    @php
+                                                    $estado = \App\Models\EncuestasUsuario::where('id_encuesta', $encuesta->id)
+                                                                                        ->where('id_usuario', auth()->id())
+                                                                                        ->first();
+                                                    @endphp
+
+                                                    @if($estado && $estado->completado == 1)
+                                                        <button class="btn btn-sm btn-secondary" disabled>
+                                                            Ya respondida
+                                                        </button>
+                                                    @else
+                                                        <a class="btn btn-sm btn-primary"
+                                                        href="{{ route('encuestas.flujo.start', $encuesta->id) }}">
+                                                            Responder
+                                                        </a>
+                                                    @endif
+                                                </td>
                                             @else
                                                 <td><span class="btn btn-sm btn-warning">Inactivo</span></td>
                                                 <td></td>

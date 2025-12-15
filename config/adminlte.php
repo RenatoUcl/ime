@@ -322,6 +322,11 @@ return [
             'route' => 'encuesta.index',
         ],
         [
+            'text'  => 'Asignar Accesos',
+            'icon'  => 'fas fa-fw fa-key',
+            'route' => 'encuestas.accesos.index',
+        ],
+        [
             'text'  => 'Responder Encuestas',
             'icon'  => 'fas fa-fw fa-file',
             'route' => 'responder.index',

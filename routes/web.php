@@ -21,6 +21,12 @@ use App\Http\Controllers\RespuestaController;
 use App\Http\Controllers\AlternativaController;
 use App\Http\Controllers\ResponderController;
 use App\Http\Controllers\IndiceMultiController;
+use App\Http\Controllers\EncuestasAccesoController;
+use App\Http\Controllers\EncuestaFlujoController;
+use App\Http\Controllers\EncuestaInstanciaController;
+
+use App\Models\Dimension;
+use App\Models\Encuesta;
 
 use Illuminate\Support\Facades\Route;
 
@@ -267,12 +273,51 @@ Route::middleware("auth")->group(function (){
         Route::post('/responder/guardar', 'guardar')->name('responder.guardar');
         Route::get('/responder/{id}/continuar','continuar')->name('responder.continuar');
         Route::post('/responder/guardar-respuestas-grupo','guardarRespuestasGrupo')->name('responder.guardarRespuestasGrupo');
+        Route::get('/responder/{id_encuesta}/grupo/{grupo}', 'mostrarGrupo')->name('responder.mostrarGrupo');
     });
 
     Route::controller(IndiceMultiController::class)->group(function(){
         Route::get('/indice','index')->name('indice.index');
         Route::get('/indice/{idEncuesta}/{idDimension}', 'detalle')->name('indice.detalle');
     });
+
+    Route::controller(EncuestasAccesoController::class)->group(function(){
+        Route::get('/encuestas/accesos', 'index')->name('encuestas.accesos.index');
+        Route::get('/encuestas/accesos/create', 'create')->name('encuestas.accesos.create');
+        Route::post('/encuestas/accesos/store', 'store')->name('encuestas.accesos.store');
+        Route::get('/encuestas/accesos/{id}/edit', 'edit')->name('encuestas.accesos.edit');
+        Route::put('/encuestas/accesos/{id}/update', 'update')->name('encuestas.accesos.update');
+        Route::delete('/encuestas/accesos/{id}', 'destroy')->name('encuestas.accesos.destroy');
+    });
+
+    Route::get('/encuestas/{id}/dimensiones', function ($id) {
+        $encuesta = Encuesta::findOrFail($id);
+        // Buscamos dimensiones por la línea de la encuesta
+        $dimensiones = Dimension::where('id_linea', $encuesta->id_linea)
+                                ->orderBy('posicion', 'asc')
+                                ->get();
+        return response()->json($dimensiones);
+    });
+
+    Route::controller(EncuestaFlujoController::class)->group(function(){
+        Route::get('/encuestas/{encuestaId}/flujo/grupo/{grupo}', 'showGrupo')->name('encuestas.flujo.grupo');
+        Route::get('/encuestas/{encuestaId}/flujo', 'start')->name('encuestas.flujo.start');
+        Route::post('/encuestas/{encuestaId}/fluir/guardar', 'guardarRespuestaAjax')->name('encuestas.flujo.guardar');
+        Route::get('/encuestas/{encuestaId}/fluir/finalizar}','finalizar')->name('encuestas.flujo.finalizar');
+    });
+
+    Route::get('/encuestas/accesos-matriz', [EncuestasAccesoController::class, 'matriz'])->name('encuestas.accesos.matriz');
+
+    // Instancias Encuestas
+    Route::controller(EncuestaInstanciaController::class)
+        ->prefix('encuesta/{encuestaId}/instancias')
+        ->group(function(){
+            Route::get('/', 'index')->name('encuestas.instancias.index');
+            Route::get('/crear', 'create')->name('encuestas.instancias.create');
+            Route::post('/crear', 'store')->name('encuestas.instancias.store');
+            Route::post('/{instanciaId}/cerrar', 'close')->name('encuestas.instancias.close');
+    });
+
     /*
     // BASE
     Route::controller(Controller::class)->group(function(){
@@ -281,12 +326,10 @@ Route::middleware("auth")->group(function (){
         Route::post('//store', 'store')->name('.store');
         Route::get('//show/{id}', 'show')->name('.show');
         Route::get('//edit/{id}', 'edit')->name('.edit');
-        Route::put('//update/{id}', 'update')->name('.update');
+            Route::put('//update/{id}', 'update')->name('.update');
         Route::put('//disabled/{id}', 'disabled')->name('.disabled');
         //Route::delete('//destroy/{id}', 'destroy')->name('.destroy');
     });
     */
-
-
 
 });                                                                                                                                         

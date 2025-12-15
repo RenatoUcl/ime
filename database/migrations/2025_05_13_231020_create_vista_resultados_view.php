@@ -11,7 +11,7 @@ return new class extends Migration
      * Run the migrations.
      */
     public function up(): void
-    {
+    {/*
         DB::statement("
             CREATE VIEW vista_resultados_view AS
             SELECT 
@@ -25,7 +25,7 @@ return new class extends Migration
             LEFT JOIN subdimensiones AS sd ON sd.id = r.nivel 
             LEFT JOIN dimensiones AS d ON d.id = sd.id_dimension
             GROUP BY r.nivel, d.id, d.nombre, sd.id, sd.nombre
-        ");
+        ");*/
     }
 
     /**
