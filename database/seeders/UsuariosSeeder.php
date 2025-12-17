@@ -2,71 +2,94 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
-
-use App\Models\User;
-use App\Models\Roles;
-
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Hash;
+
+use App\Models\Roles;
+use App\Models\User;
 
 class UsuariosSeeder extends Seeder
 {
     public function run(): void
     {
-        $admin = User::create([
-            'nombre' => 'Renato',
-            'ap_paterno' => 'Soto',
-            'ap_materno' => 'Moya',
-            'email' => 'renato.soto@uchile.cl',
-            'telefono' => '978653895',
-            'password' => Hash::make('1646Gamero')
+        $usuarios = Collection::make([
+            [
+                'datos' => [
+                    'nombre' => 'Renato',
+                    'ap_paterno' => 'Soto',
+                    'ap_materno' => 'Moya',
+                    'email' => 'renato.soto@uchile.cl',
+                    'telefono' => '978653895',
+                    'password' => '1646Gamero',
+                ],
+                'rol' => 'admin',
+                'permisos' => [1, 2, 3, 4],
+            ],
+            [
+                'datos' => [
+                    'nombre' => 'Director',
+                    'ap_paterno' => 'director',
+                    'ap_materno' => 'director',
+                    'email' => 'director@ime.cl',
+                    'telefono' => '123456780',
+                    'password' => '.Dir.2025.-',
+                ],
+                'rol' => 'director',
+                'permisos' => [1, 2, 3],
+            ],
+            [
+                'datos' => [
+                    'nombre' => 'Coordinador',
+                    'ap_paterno' => 'coordinador',
+                    'ap_materno' => 'coordinador',
+                    'email' => 'coordinador@ime.cl',
+                    'telefono' => '123456780',
+                    'password' => '.Cor.2025.-',
+                ],
+                'rol' => 'coordinador',
+                'permisos' => [1, 2, 3, 4],
+            ],
+            [
+                'datos' => [
+                    'nombre' => 'Equipo',
+                    'ap_paterno' => 'equipo',
+                    'ap_materno' => 'equipo',
+                    'email' => 'equipo@ime.cl',
+                    'telefono' => '123456780',
+                    'password' => '.Equ.2025.-',
+                ],
+                'rol' => 'equipo',
+                'permisos' => [1, 2, 3],
+            ],
         ]);
-        $director = User::create([
-            'nombre' => 'Director',
-            'ap_paterno' => 'director',
-            'ap_materno' => 'director',
-            'email' => 'director@ime.cl',
-            'telefono' => '123456780',
-            'password' => Hash::make('.Dir.2025.-')
-        ]);
-        $coordinador = User::create([
-            'nombre' => 'Coordinador',
-            'ap_paterno' => 'coordinador',
-            'ap_materno' => 'coordinador',
-            'email' => 'coordinador@ime.cl',
-            'telefono' => '123456780',
-            'password' => Hash::make('.Cor.2025.-')
-        ]);
-        $equipo = User::create([
-            'nombre' => 'Equipo',
-            'ap_paterno' => 'equipo',
-            'ap_materno' => 'equipo',
-            'email' => 'equipo@ime.cl',
-            'telefono' => '123456780',
-            'password' => Hash::make('.Equ.2025.-')
-        ]);
 
-        // Asignar roles
-        $admin->roles()->attach(Roles::where('nombre', 'admin')->first()->id);
-        $director->roles()->attach(Roles::where('nombre', 'director')->first()->id);
-        $coordinador->roles()->attach(Roles::where('nombre', 'coordinador')->first()->id);
-        $equipo->roles()->attach(Roles::where('nombre', 'equipo')->first()->id);
+        $roles = Roles::whereIn('nombre', $usuarios->pluck('rol'))
+            ->get()
+            ->keyBy('nombre');
 
-        // Asignar permisos al rol admin
-        $adminRole = Roles::where('nombre', 'admin')->first();
-        $adminRole->permissions()->sync([1, 2, 3, 4]);
+        $usuarios->each(function ($usuario) use ($roles) {
+            $rol = $roles->get($usuario['rol']);
 
-        // Asignar permisos al rol Director
-        $directorRole = Roles::where('nombre', 'director')->first();
-        $directorRole->permissions()->sync([1, 2, 3]);
+            if (! $rol) {
+                throw new \RuntimeException("No se encontró el rol {$usuario['rol']} para crear el usuario correspondiente.");
+            }
 
-        // Asignar permisos al rol Coordinador
-        $coordinadorRole = Roles::where('nombre', 'coordinador')->first();
-        $coordinadorRole->permissions()->sync([1, 2, 3, 4]);
+            $datos = $usuario['datos'];
 
-        // Asignar permisos al rol Equipo
-        $equipoRole = Roles::where('nombre', 'equipo')->first();
-        $equipoRole->permissions()->sync([1, 2, 3]);
+            $user = User::updateOrCreate(
+                ['email' => $datos['email']],
+                [
+                    'nombre' => $datos['nombre'],
+                    'ap_paterno' => $datos['ap_paterno'],
+                    'ap_materno' => $datos['ap_materno'],
+                    'telefono' => $datos['telefono'],
+                    'password' => Hash::make($datos['password']),
+                ],
+            );
+
+            $user->roles()->syncWithoutDetaching([$rol->id]);
+            $rol->permissions()->sync($usuario['permisos']);
+        });
     }
 }
