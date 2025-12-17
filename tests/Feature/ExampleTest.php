@@ -16,4 +16,12 @@ class ExampleTest extends TestCase
 
         $response->assertStatus(200);
     }
+
+    public function test_guest_is_redirected_to_login_when_accessing_protected_route(): void
+    {
+        $response = $this->get('/home');
+
+        $response->assertStatus(302);
+        $response->assertRedirect(route('login'));
+    }
 }
