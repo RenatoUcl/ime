@@ -39,23 +39,23 @@ class Encuesta extends Model
      */
     public function cabeceraPreguntas()
     {
-        return $this->hasMany(\App\Models\CabeceraPregunta::class, 'id', 'id_encuesta');
+        return $this->hasMany(\App\Models\CabeceraPregunta::class, 'id_encuesta', 'id');
     }
-    
+
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
     public function encuestasArchivos()
     {
-        return $this->hasMany(\App\Models\EncuestasArchivo::class, 'id', 'id_encuesta');
+        return $this->hasMany(\App\Models\EncuestasArchivo::class, 'id_encuesta', 'id');
     }
-    
+
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
     public function encuestasUsuarios()
     {
-        return $this->hasMany(\App\Models\EncuestasUsuario::class, 'id', 'id_encuesta');
+        return $this->hasMany(\App\Models\EncuestasUsuario::class, 'id_encuesta', 'id');
     }
     
     /**
