@@ -23,7 +23,7 @@ return new class extends Migration
             // Si no existe la FK, la creamos
             // Nota: Laravel no trae "hasForeign" nativo, así que asumimos que no existe.
             $table->foreign('id_encuesta_instancia')
-                ->references('id')->on('encuestas_instancias')
+                ->references('id')->on('encuesta_instancias')
                 ->onDelete('cascade');
         });
     }

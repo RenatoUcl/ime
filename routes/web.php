@@ -286,6 +286,7 @@ Route::middleware("auth")->group(function (){
             Route::get('/indice/detalle/{encuesta}/{instancia}/{dimension}', 'detalle')->name('indice.detalle');
             Route::get('/indice/dimension/{encuesta}/{dimension}/{instancia}','verDimension')->name('indice.dimension.ver');
             Route::get('/indice/semaforo/{encuesta}/{instancia}','semaforo')->name('indice.semaforo');
+            Route::get('indice/dimension/{encuesta}/{dimension}/historico','historicoDimension')->name('indice.dimension.historico');
     });
 
     Route::controller(EncuestasAccesoController::class)->group(function(){

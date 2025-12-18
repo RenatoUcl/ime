@@ -26,7 +26,7 @@ return new class extends Migration
 
         Schema::table('respuestas', function (Blueprint $table) {
             $table->foreign('id_encuesta_instancia')
-                ->references('id')->on('encuestas_instancias')
+                ->references('id')->on('encuesta_instancias')
                 ->onDelete('cascade');
         });
     }

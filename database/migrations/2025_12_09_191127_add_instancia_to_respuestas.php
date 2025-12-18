@@ -11,7 +11,7 @@ return new class extends Migration {
             $table->unsignedBigInteger('id_instancia')->after('id_encuesta');
 
             $table->foreign('id_instancia')
-                  ->references('id')->on('encuestas_instancias')
+                  ->references('id')->on('encuesta_instancias')
                   ->onDelete('cascade');
         });
     }

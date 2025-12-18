@@ -84,7 +84,7 @@
                                 <input type="checkbox" name="dimensiones[]" value="${dim.id}"
                                        class="form-check-input" id="dim_${dim.id}" ${checked}>
                                 <label class="form-check-label" for="dim_${dim.id}">
-                                    lalalala ${dim.nombre}
+                                    ${dim.nombre}
                                 </label>
                             </div>
                         </div>
