@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration {
     public function up()
     {
-        Schema::create('encuestas_instancias', function (Blueprint $table) {
+        Schema::create('encuesta_instancias', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('id_encuesta');
             $table->string('nombre_periodo');
@@ -24,6 +24,6 @@ return new class extends Migration {
 
     public function down()
     {
-        Schema::dropIfExists('encuestas_instancias');
+        Schema::dropIfExists('encuesta_instancias');
     }
 };

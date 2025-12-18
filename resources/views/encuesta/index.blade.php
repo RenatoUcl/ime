@@ -55,10 +55,26 @@
                                                     <span class="btn btn-sm btn-warning">Inactivo</span>
                                                 @endif
                                             </td>
-                                            <td>                                               
-                                                <form action="{{ route('encuesta.disabled', $encuesta->id) }}" method="POST">                                                    
-                                                    <a class="btn btn-sm btn-warning" href="{{ route('encuesta.edit', $encuesta->id) }}" title="Modificar"><i class="fa fa-fw fa-edit"></i></a>
-                                                    <a class="btn btn-sm btn-info" href="{{ route('encuesta.clonar', $encuesta->id) }}" title="Clonar"><i class="fa fa-fw fa-clone"></i></a>
+                                            <td>
+                                                <a class="btn btn-sm btn-secondary" 
+                                                    href="{{ route('encuestas.periodos.index', $encuesta->id) }}" 
+                                                    title="Períodos de aplicación"
+                                                    style="display:inline">
+                                                    <i class="fa fa-fw fa-calendar"></i></a>
+                                                <a class="btn btn-sm btn-warning" 
+                                                    href="{{ route('encuesta.edit', $encuesta->id) }}" 
+                                                    title="Modificar"
+                                                    style="display:inline"><i class="fa fa-fw fa-edit"></i></a>
+                                                {{-- BOTÓN CLONAR (POST) --}}
+                                                <form action="{{ route('encuesta.clonar', $encuesta->id) }}" method="POST" style="display:inline">
+                                                    @csrf
+                                                    <button type="submit"
+                                                            class="btn btn-sm btn-info"
+                                                            title="Clonar">
+                                                        <i class="fa fa-fw fa-clone"></i>
+                                                    </button>
+                                                </form>                                               
+                                                <form action="{{ route('encuesta.disabled', $encuesta->id) }}" method="POST" style="display:inline">                                                    
                                                     @csrf
                                                     @method('PUT')
                                                     <button type="submit" class="btn btn-danger btn-sm" onclick="event.preventDefault(); confirm('Are you sure to delete?') ? this.closest('form').submit() : false;" title="Eliminar"><i class="fa fa-fw fa-trash"></i></button>

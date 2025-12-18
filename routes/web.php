@@ -276,9 +276,16 @@ Route::middleware("auth")->group(function (){
         Route::get('/responder/{id_encuesta}/grupo/{grupo}', 'mostrarGrupo')->name('responder.mostrarGrupo');
     });
 
-    Route::controller(IndiceMultiController::class)->group(function(){
-        Route::get('/indice','index')->name('indice.index');
-        Route::get('/indice/{idEncuesta}/{idDimension}', 'detalle')->name('indice.detalle');
+    Route::controller(IndiceMultiController::class)
+        ->group(function(){
+            //Route::get('/indice','index')->name('indice.index');
+            //Route::get('/indice/{idEncuesta}/{idDimension}', 'detalle')->name('indice.detalle');
+            Route::get('/indice', 'index')->name('indice.index');
+            Route::post('/indice/resultados', 'resultados')->name('indice.resultados');
+            Route::post('/indice/comparar', 'comparar')->name('indice.comparar');
+            Route::get('/indice/detalle/{encuesta}/{instancia}/{dimension}', 'detalle')->name('indice.detalle');
+            Route::get('/indice/dimension/{encuesta}/{dimension}/{instancia}','verDimension')->name('indice.dimension.ver');
+            Route::get('/indice/semaforo/{encuesta}/{instancia}','semaforo')->name('indice.semaforo');
     });
 
     Route::controller(EncuestasAccesoController::class)->group(function(){
@@ -310,26 +317,14 @@ Route::middleware("auth")->group(function (){
 
     // Instancias Encuestas
     Route::controller(EncuestaInstanciaController::class)
-        ->prefix('encuesta/{encuestaId}/instancias')
-        ->group(function(){
-            Route::get('/', 'index')->name('encuestas.instancias.index');
-            Route::get('/crear', 'create')->name('encuestas.instancias.create');
-            Route::post('/crear', 'store')->name('encuestas.instancias.store');
-            Route::post('/{instanciaId}/cerrar', 'close')->name('encuestas.instancias.close');
+        ->prefix('encuestas/{encuesta}')
+        ->group(function () {
+            Route::get('periodos','index')->name('encuestas.periodos.index');
+            Route::get('periodos/crear', 'create')->name('encuestas.periodos.create');
+            Route::post('periodos', 'store')->name('encuestas.periodos.store');
     });
-
-    /*
-    // BASE
-    Route::controller(Controller::class)->group(function(){
-        Route::get('/','index')->name('.index');
-        Route::get('//create','create')->name('.create');
-        Route::post('//store', 'store')->name('.store');
-        Route::get('//show/{id}', 'show')->name('.show');
-        Route::get('//edit/{id}', 'edit')->name('.edit');
-            Route::put('//update/{id}', 'update')->name('.update');
-        Route::put('//disabled/{id}', 'disabled')->name('.disabled');
-        //Route::delete('//destroy/{id}', 'destroy')->name('.destroy');
-    });
-    */
+    Route::get('periodos/{id}/editar',[EncuestaInstanciaController::class, 'edit'])->name('encuestas.periodos.edit');
+    Route::put('periodos/{id}',[EncuestaInstanciaController::class, 'update'])->name('encuestas.periodos.update');
+    Route::delete('periodos/{id}',[EncuestaInstanciaController::class, 'destroy'])->name('encuestas.periodos.destroy');
 
 });                                                                                                                                         

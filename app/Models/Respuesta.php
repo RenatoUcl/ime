@@ -6,10 +6,11 @@ use Illuminate\Database\Eloquent\Model;
 
 class Respuesta extends Model
 {
-    protected $perPage = 20;
+    protected $table = 'respuestas';
 
     protected $fillable = [
         'id_encuesta',
+        'id_encuesta_instancia',
         'id_pregunta',
         'id_alternativa',
         'id_usuario',
@@ -19,12 +20,11 @@ class Respuesta extends Model
 
     public function alternativa()
     {
-        return $this->belongsTo(\App\Models\Alternativa::class, 'id_alternativa', 'id');
+        return $this->belongsTo(Alternativa::class, 'id_alternativa', 'id');
     }
-    
+
     public function pregunta()
     {
-        return $this->belongsTo(\App\Models\Pregunta::class, 'id_pregunta', 'id');
+        return $this->belongsTo(Pregunta::class, 'id_pregunta', 'id');
     }
-    
 }

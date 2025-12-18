@@ -8,67 +8,119 @@ use Illuminate\Http\Request;
 
 class EncuestaInstanciaController extends Controller
 {
-    /**
-     * Lista todas las instancias de la encuesta
-     */
     public function index($encuestaId)
     {
         $encuesta = Encuesta::findOrFail($encuestaId);
 
-        $instancias = EncuestaInstancia::where('id_encuesta', $encuestaId)
-            ->orderBy('id', 'desc')
+        $periodos = EncuestaInstancia::where('id_encuesta', $encuestaId)
+            ->orderByDesc('fecha_desde')
             ->get();
 
-        return view('encuestas.instancias.index', compact('encuesta', 'instancias'));
+        return view('encuestas_periodos.index', compact('encuesta', 'periodos'));
     }
 
-    /**
-     * Formulario crear instancia nueva
-     */
     public function create($encuestaId)
     {
         $encuesta = Encuesta::findOrFail($encuestaId);
-        return view('encuestas.instancias.create', compact('encuesta'));
+        return view('encuestas_periodos.create', compact('encuesta'));
     }
 
-    /**
-     * Guardar instancia nueva
-     */
     public function store(Request $request, $encuestaId)
     {
         $request->validate([
-            'fecha_inicio' => 'required|date',
-            'fecha_fin'    => 'required|date|after_or_equal:fecha_inicio',
+            'nombre_periodo' => 'required|string|max:255',
+            'fecha_desde'    => 'required|date',
+            'fecha_hasta'    => 'required|date|after_or_equal:fecha_desde',
+            'estado'         => 'nullable|boolean',
         ]);
+
+        // Opción A: Bloquear solapamientos (solo considerar períodos activos)
+        $haySolapamiento = EncuestaInstancia::where('id_encuesta', $encuestaId)
+            ->where('estado', 1)
+            ->where(function ($q) use ($request) {
+                // overlap: (start <= existing_end) AND (end >= existing_start)
+                $q->whereDate('fecha_desde', '<=', $request->fecha_hasta)
+                  ->whereDate('fecha_hasta', '>=', $request->fecha_desde);
+            })
+            ->exists();
+
+        if ($haySolapamiento) {
+            return back()
+                ->withInput()
+                ->withErrors(['fecha_desde' => 'Ya existe un período activo que se cruza con estas fechas. Ajuste el rango o cierre el otro período.']);
+        }
 
         EncuestaInstancia::create([
-            'id_encuesta' => $encuestaId,
-            'fecha_inicio' => $request->fecha_inicio,
-            'fecha_fin'    => $request->fecha_fin,
-            'activa'       => 1,
+            'id_encuesta'    => $encuestaId,
+            'nombre_periodo' => $request->nombre_periodo,
+            'fecha_desde'    => $request->fecha_desde,
+            'fecha_hasta'    => $request->fecha_hasta,
+            'estado'         => $request->has('estado') ? (int)$request->estado : 1,
         ]);
 
         return redirect()
-            ->route('encuestas.instancias.index', $encuestaId)
-            ->with('success', 'Instancia creada correctamente');
+            ->route('encuestas.periodos.index', $encuestaId)
+            ->with('success', 'Período de aplicación creado correctamente.');
     }
 
-    /**
-     * Cerrar manualmente una instancia
-     */
-    public function close($encuestaId, $instanciaId)
+    public function edit($id)
     {
-        $instancia = EncuestaInstancia::where('id_encuesta', $encuestaId)
-            ->where('id', $instanciaId)
-            ->firstOrFail();
+        $periodo = EncuestaInstancia::findOrFail($id);
+        $encuesta = $periodo->encuesta;
 
-        $instancia->update([
-            'activa'     => 0,
-            'fecha_fin'  => now(),
+        return view('encuestas_periodos.edit', compact('periodo', 'encuesta'));
+    }
+
+    public function update(Request $request, $id)
+    {
+        $periodo = EncuestaInstancia::findOrFail($id);
+
+        $request->validate([
+            'nombre_periodo' => 'required|string|max:255',
+            'fecha_desde'    => 'required|date',
+            'fecha_hasta'    => 'required|date|after_or_equal:fecha_desde',
+            'estado'         => 'required|boolean',
+        ]);
+
+        // Opción A: Bloquear solapamientos (solo considerar períodos activos, excluyendo este)
+        if ((int)$request->estado === 1) {
+            $haySolapamiento = EncuestaInstancia::where('id_encuesta', $periodo->id_encuesta)
+                ->where('estado', 1)
+                ->where('id', '!=', $periodo->id)
+                ->where(function ($q) use ($request) {
+                    $q->whereDate('fecha_desde', '<=', $request->fecha_hasta)
+                      ->whereDate('fecha_hasta', '>=', $request->fecha_desde);
+                })
+                ->exists();
+
+            if ($haySolapamiento) {
+                return back()
+                    ->withInput()
+                    ->withErrors(['fecha_desde' => 'Ya existe un período activo que se cruza con estas fechas. Ajuste el rango o cierre el otro período.']);
+            }
+        }
+
+        $periodo->update([
+            'nombre_periodo' => $request->nombre_periodo,
+            'fecha_desde'    => $request->fecha_desde,
+            'fecha_hasta'    => $request->fecha_hasta,
+            'estado'         => (int)$request->estado,
         ]);
 
         return redirect()
-            ->route('encuestas.instancias.index', $encuestaId)
-            ->with('success', 'La instancia fue cerrada correctamente');
+            ->route('encuestas.periodos.index', $periodo->id_encuesta)
+            ->with('success', 'Período de aplicación actualizado correctamente.');
+    }
+
+    public function destroy($id)
+    {
+        $periodo = EncuestaInstancia::findOrFail($id);
+        $encuestaId = $periodo->id_encuesta;
+
+        $periodo->delete();
+
+        return redirect()
+            ->route('encuestas.periodos.index', $encuestaId)
+            ->with('success', 'Período eliminado.');
     }
 }

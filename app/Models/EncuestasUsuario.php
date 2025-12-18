@@ -24,25 +24,20 @@ class EncuestasUsuario extends Model
     
     protected $perPage = 20;
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var array<int, string>
-     */
-    protected $fillable = ['id_encuesta', 'id_usuario','ultima_pregunta_id','completado'];
+    protected $fillable = [
+        'id_encuesta', 
+        'id_encuesta_instancia',
+        'id_usuario',
+        'ultima_pregunta_id',
+        'ultimo_grupo',
+        'completado'
+    ];
 
-
-    /**
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
-     */
     public function encuesta()
     {
         return $this->belongsTo(\App\Models\Encuesta::class, 'id_encuesta', 'id');
     }
     
-    /**
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
-     */
     public function user()
     {
         return $this->belongsTo(\App\Models\User::class, 'id_usuario', 'id');
