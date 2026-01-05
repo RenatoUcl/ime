@@ -37,4 +37,14 @@ class Pregunta extends Model
             ->where('id_usuario', auth()->id());
     }
 
+    public function dependencia()
+    {
+        return $this->belongsTo(Pregunta::class, 'id_dependencia');
+    }
+
+    public function subdimension()
+    {
+        return $this->belongsTo(Subdimension::class, 'id_subdimension');
+    }
+
 }

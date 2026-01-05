@@ -136,7 +136,8 @@
                                                                                                                         <td class="mx-auto">{{ $alter->valor }}</td>
                                                                                                                         <td>{!! $alter->texto !!}</td>
                                                                                                                         <td>
-                                                                                                                            <a type="button" class="btn btn-sm btn-warning" href="{{ route('alternativa.edit',$alter->id) }}" title="Editar Alternativa"><i class="fas fa-edit"></i></a>
+                                                                                                                            <button type="button" class="btn btn-sm btn-warning" data-toggle="modal" data-target="#ModalEditAlt{{ $alter->id }}" title="Editar Alternativa"><i class="fas fa-edit"></i></button>
+                                                                                                                            @include('encuesta.modal_edit_alternativa', ['alter' => $alter])
                                                                                                                             <a type="buttom" class="btn btn-sm btn-danger" href="{{ route('alternativa.disabled',$alter->id) }}"><i class="fas fa-trash-alt"></i></button>
                                                                                                                         </td>
                                                                                                                     </tr>
@@ -247,7 +248,8 @@
                                                                                                                         <td class="mx-auto">{{ $alter->valor }}</td>
                                                                                                                         <td>{!! $alter->texto !!}</td>
                                                                                                                         <td>
-                                                                                                                            <a type="button" class="btn btn-sm btn-warning" href="{{ route('alternativa.edit',$alter->id) }}" title="Editar Alternativa"><i class="fas fa-edit"></i></a>
+                                                                                                                            <button type="button" class="btn btn-sm btn-warning" data-toggle="modal" data-target="#ModalEditAlt{{ $alter->id }}" title="Editar Alternativa"><i class="fas fa-edit"></i></button>
+                                                                                                                            @include('encuesta.modal_edit_alternativa', ['alter' => $alter])
                                                                                                                             <a type="buttom" class="btn btn-sm btn-danger" href="{{ route('alternativa.disabled',$alter->id) }}"><i class="fas fa-trash-alt"></i></button>
                                                                                                                         </td>
                                                                                                                     </tr>

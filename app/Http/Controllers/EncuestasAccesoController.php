@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\DB;
 
 class EncuestasAccesoController extends Controller
 {
+    /*
     public function index()
     {
         $accesos = EncuestaUsuarioDimension::with(['usuario', 'encuesta', 'dimension'])
@@ -23,6 +24,49 @@ class EncuestasAccesoController extends Controller
                 return $item->id_usuario . '-' . $item->id_encuesta;
             });
         return view('encuestas_accesos.index', compact('accesos'));
+    }
+    */
+
+    public function index(Request $request)
+    {
+        $search = $request->get('search');
+
+        // 1. Obtener combinaciones únicas usuario-encuesta (PAGINADAS)
+        $accesosBase = EncuestaUsuarioDimension::select(
+                'id_usuario',
+                'id_encuesta',
+                DB::raw('COUNT(*) as total_dimensiones'),
+                DB::raw('MIN(id) as id_representativo')
+            )
+            ->when($search, function ($query, $search) {
+                $query->whereHas('usuario', function ($q) use ($search) {
+                    $q->where('nombre', 'like', "%{$search}%")
+                    ->orWhere('ap_paterno', 'like', "%{$search}%")
+                    ->orWhere('ap_materno', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%");
+                })
+                ->orWhereHas('encuesta', function ($q) use ($search) {
+                    $q->where('nombre', 'like', "%{$search}%");
+                });
+            })
+            ->groupBy('id_usuario', 'id_encuesta')
+            ->orderBy('id_usuario')
+            ->paginate(20);
+
+        // 2. Cargar relaciones completas SOLO de la página actual
+        $accesos = collect();
+
+        foreach ($accesosBase as $row) {
+            $grupo = EncuestaUsuarioDimension::with(['usuario', 'encuesta', 'dimension'])
+                ->where('id_usuario', $row->id_usuario)
+                ->where('id_encuesta', $row->id_encuesta)
+                ->orderBy('orden')
+                ->get();
+
+            $accesos->push($grupo);
+        }
+
+        return view('encuestas_accesos.index', compact('accesos', 'accesosBase', 'search'));
     }
 
     public function create()

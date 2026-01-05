@@ -17,6 +17,26 @@
 
     <div class="card">
         <div class="card-header">
+            <form method="GET" action="{{ route('encuestas.accesos.index') }}" class="mb-3">
+                <div class="row">
+                    <div class="col-md-4">
+                        <input type="text"
+                            name="search"
+                            class="form-control form-control-sm"
+                            placeholder="Buscar usuario o encuesta..."
+                            value="{{ request('search') }}">
+                    </div>
+                    <div class="col-md-2">
+                        <button class="btn btn-primary btn-sm">Buscar</button>
+                        @if(request('search'))
+                            <a href="{{ route('encuestas.accesos.index') }}"
+                            class="btn btn-secondary btn-sm">
+                                Limpiar
+                            </a>
+                        @endif
+                    </div>
+                </div>
+            </form>
             <a href="{{ route('encuestas.accesos.create') }}" class="btn btn-primary">
                 <i class="fa fa-plus"></i> Nuevo Acceso
             </a>
@@ -63,6 +83,9 @@
                     @endforeach
                 </tbody>
             </table>
+            @if(isset($accesosBase))
+                {{ $accesosBase->withQueryString()->links() }}
+            @endif
             @if($accesos->isEmpty())
                 <p class="text-center mt-3">No hay accesos configurados.</p>
             @endif

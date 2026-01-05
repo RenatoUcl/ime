@@ -337,6 +337,27 @@ return [
             'route' => 'indice.index',
         ],
         [
+            'text' => 'Administracion',
+            'icon' => 'fas fa-cog',
+            'submenu' => [
+                [
+                    'text' => 'Lineas Programaticas',
+                    'shift' => 'ml-3',
+                    'route' => 'linea.index',
+                ],
+                [
+                    'text' => 'Dimensiones',
+                    'shift' => 'ml-3',
+                    'route' => 'dimension.index',
+                ],
+                [
+                    'text' => 'Subdimensiones',
+                    'shift' => 'ml-3',
+                    'route' => 'subdimension.index',
+                ],
+            ],
+        ],
+        [
             'text' => 'Usuarios y Permisos',
             'icon' => 'fas fa-users',
             'submenu' => [
@@ -358,56 +379,6 @@ return [
                     'icon' => 'fas fa-hand-sparkles',
                     'route' => 'permiso.index',
                 ],
-            ],
-        ],
-        [
-            'text' => 'Administracion',
-            'icon' => 'fas fa-cog',
-            'submenu' => [
-                /*
-                [
-                    'text' => 'Cargos',
-                    'shift' => 'ml-3',
-                    'route' => 'cargo.index',
-                ],
-                [
-                    'text' => 'Departamentos',
-                    'shift' => 'ml-3',
-                    'route' => 'departamento.index',
-                ],
-                */
-                [
-                    'text' => 'Lineas Programaticas',
-                    'shift' => 'ml-3',
-                    'route' => 'linea.index',
-                ],
-                [
-                    'text' => 'Dimensiones',
-                    'shift' => 'ml-3',
-                    'route' => 'dimension.index',
-                ],
-                [
-                    'text' => 'Subdimensiones',
-                    'shift' => 'ml-3',
-                    'route' => 'subdimension.index',
-                ],
-                /*
-                [
-                    'text' => 'Niveles Primarios',
-                    'shift' => 'ml-3',
-                    'route' => 'niveles-primario.index',
-                ],
-                [
-                    'text' => 'Niveles Secundarios',
-                    'shift' => 'ml-3',
-                    'route' => 'niveles-secundario.index',
-                ],
-                [
-                    'text' => 'Niveles Terciarios',
-                    'shift' => 'ml-3',
-                    'route' => 'niveles-terciario.index',
-                ],
-                */
             ],
         ],
     ],

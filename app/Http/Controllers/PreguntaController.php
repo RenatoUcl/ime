@@ -47,6 +47,7 @@ class PreguntaController extends Controller
         return view('pregunta.show', compact('pregunta'));
     }
 
+    /*
     public function edit($id): View
     {
         $pregunta = Pregunta::find($id);
@@ -57,7 +58,33 @@ class PreguntaController extends Controller
         $preguntas = Pregunta::all();
         return view('pregunta.edit', compact('pregunta','subdimensiones','encuesta','preguntas'));
     }
+    */
 
+    public function edit($id): View
+    {
+        $pregunta = Pregunta::findOrFail($id);
+
+        $encuesta = Encuesta::select('id','nombre')
+            ->where('id', $pregunta->id_encuesta)
+            ->first();
+
+        $subdimensiones = Subdimension::all();
+
+        // Solo preguntas de la misma encuesta
+        // Excluye la pregunta actual
+        $preguntas = Pregunta::where('id_encuesta', $pregunta->id_encuesta)
+            ->where('id', '!=', $pregunta->id)
+            ->orderBy('posicion')
+            ->get();
+
+        return view('pregunta.edit', compact(
+            'pregunta',
+            'subdimensiones',
+            'encuesta',
+            'preguntas'
+        ));
+    }
+    
     public function update(Request $request, $pregunta): RedirectResponse
     {
         $pregunta = Pregunta::find($request->id);

@@ -12,7 +12,7 @@
 
     <div class="card-header">
         <h4><strong>Dimensión:</strong> {{ $dimension->nombre }}</h4>
-        <p>{{ $dimension->descripcion }}</p>
+        <p>{!! $dimension->descripcion !!}</p>
         <hr>
         <h5><strong>Subdimensión:</strong> {{ $subdimension->nombre }}</h5>
         <p>{{ $subdimension->descripcion }}</p>

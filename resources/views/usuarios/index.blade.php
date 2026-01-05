@@ -22,6 +22,27 @@
                     @endif
                     <div class="card-body bg-white">
                         <div class="table-responsive">
+<form method="GET" action="{{ route('usuarios.index') }}" class="mb-3">
+    <div class="row">
+        <div class="col-md-4">
+            <input type="text"
+                   name="search"
+                   class="form-control form-control-sm"
+                   placeholder="Buscar por nombre o correo..."
+                   value="{{ request('search') }}">
+        </div>
+        <div class="col-md-2">
+            <button class="btn btn-primary btn-sm" type="submit">
+                Buscar
+            </button>
+            @if(request('search'))
+                <a href="{{ route('usuarios.index') }}" class="btn btn-secondary btn-sm">
+                    Limpiar
+                </a>
+            @endif
+        </div>
+    </div>
+</form>
                             <table class="table table-striped table-hover">
                                 <thead class="thead">
                                     <tr>

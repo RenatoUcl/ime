@@ -4,9 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use App\Models\Roles;
+use App\Http\Requests\UserRequest;
+use App\Http\Requests\UserUpdateRequest;
+
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use App\Http\Requests\UserRequest;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\View\View;
@@ -19,14 +21,25 @@ class UserController extends Controller
      */
     public function index(Request $request): View
     {
-        $user = auth()->user()->load('roles');
-        if (!$user->hasRole('admin')) {
+        $userAuth = auth()->user()->load('roles');
+        if (!$userAuth->hasRole('admin')) {
             abort(403, 'No tienes permiso para acceder a esta sección.');
         }
 
-        $users = User::paginate();
+        $search = $request->get('search');
 
-        return view('usuarios.index', compact('users'))
+        $users = User::when($search, function ($query, $search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('nombre', 'like', "%{$search}%")
+                    ->orWhere('ap_paterno', 'like', "%{$search}%")
+                    ->orWhere('ap_materno', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%");
+                });
+            })
+            ->orderBy('id', 'asc')
+            ->paginate(20);
+
+        return view('usuarios.index', compact('users', 'search'))
             ->with('i', ($request->input('page', 1) - 1) * $users->perPage());
     }
 
@@ -73,12 +86,31 @@ class UserController extends Controller
     /**
      * Update the specified resource in storage.
      */
+    /*
     public function update(UserRequest $request, $user): RedirectResponse
     {
         $user->update($request->validated());
 
         return Redirect::route('usuarios.index')
             ->with('success', 'Rol actualizado satisfactoriamente');
+    }
+    */
+
+    public function update(UserUpdateRequest $request, $id): RedirectResponse
+    {
+        $user = User::findOrFail($id);
+        $data = $request->validated();
+
+        if (!empty($data['password'])) {
+            $data['password'] = Hash::make($data['password']);
+        } else {
+            unset($data['password']);
+        }
+
+        $user->update($data);
+
+        return Redirect::route('usuarios.index')
+            ->with('success', 'Usuario actualizado correctamente');
     }
 
     public function disabled($id): RedirectResponse

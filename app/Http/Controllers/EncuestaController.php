@@ -149,6 +149,25 @@ class EncuestaController extends Controller
             $alternativa->id_dependencia = $request->adepende[$pos];
             $alternativa->save();
         }
+
+        if ($request->input('action') === 'editar_alternativa') {
+
+            if ($request->has('edit_id_alternativa')) {
+
+                foreach ($request->edit_id_alternativa as $idAlt) {
+
+                    Alternativa::where('id', $idAlt)->update([
+                        'texto'          => $request->edit_alternativa[$idAlt] ?? '',
+                        'valor'          => $request->edit_puntaje[$idAlt] ?? 0,
+                        'id_dependencia' => $request->edit_adepende[$idAlt] ?? 0,
+                    ]);
+                }
+            }
+
+            return Redirect::route('encuesta.edit', $lastid)
+                ->with('success', 'Alternativa actualizada correctamente.');
+        }
+
         if ($request->input('action') === 'crear_cabecera') {
             $cabecera = new CabeceraPregunta();
 
