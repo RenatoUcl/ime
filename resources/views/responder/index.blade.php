@@ -12,11 +12,6 @@
                     <div class="card-header">
                         <div style="display: flex; justify-content: space-between; align-items: center;">
                             <span id="card_title">Encuestas</span>
-                            <div class="float-right">
-                                <a href="{{ route('encuesta.create') }}" class="btn btn-success btn-sm float-right" data-placement="left">
-                                    <i class="fas fa-plus"></i> Crear nueva
-                                </a>
-                            </div>
                         </div>
                     </div>
 
