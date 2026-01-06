@@ -30,7 +30,7 @@
             </select>
         </div>
         <div class="form-group mb-2 mb20">
-            <button type="button" class="btn btn-success" data-toggle="modal" data-target="#Modal1">Agregar Cabecera</button>
+            <!--<button type="button" class="btn btn-success" data-toggle="modal" data-target="#Modal1">Agregar Cabecera</button>-->
             <button type="button" class="btn btn-success" data-toggle="modal" data-target="#Modal2">Agregar Preguntas</button>
         </div>
     </div>

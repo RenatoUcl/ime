@@ -381,6 +381,24 @@ return [
                 ],
             ],
         ],
+        [
+            'text' => 'Ayuda en Linea',
+            'icon' => 'fas fa-info-circle',
+            'submenu' => [
+                [
+                    'text' => 'Manual de Usuario',
+                    'shift' => 'ml-3',
+                    'icon' => 'fas fa-book',
+                    'url'  => 'https://ime.facso.cl/manual_usuario_ime.pdf',
+                ],
+                [
+                    'text' => 'Acerca de IME',
+                    'shift' => 'ml-3',
+                    'icon' => 'fas fa-info',
+                    'url'  => 'https://ime.facso.cl/acerca-de-ime/',
+                ],
+            ],
+        ],
     ],
 
     /*
