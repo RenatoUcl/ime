@@ -16,7 +16,7 @@ class Pregunta extends Model
         return $this->belongsTo(Encuesta::class, 'id_encuesta', 'id');
     }
     
-    public function subdimensione()
+    public function subdimension()
     {
         return $this->belongsTo(Subdimension::class, 'id_subdimension', 'id');
     }
