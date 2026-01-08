@@ -5,20 +5,17 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 
 /**
- * Class Role
+ * Class Roles
  *
- * @property $id
- * @property $nombre
- * @property $descripcion
- * @property $estado
- * @property $created_at
- * @property $updated_at
+ * @property int $id
+ * @property string $nombre
+ * @property string|null $descripcion
+ * @property int $estado
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
  *
- * @property NivelesPrimario[] $nivelesPrimarios
- * @property NivelesSecundario[] $nivelesSecundarios
- * @property NivelesTerciario[] $nivelesTerciarios
- * @property PermisosRole[] $permisosRoles
- * @property RolesUsuario[] $rolesUsuarios
+ * @property \Illuminate\Database\Eloquent\Collection|User[] $users
+ * @property \Illuminate\Database\Eloquent\Collection|Permiso[] $permisos
  * @package App
  * @mixin \Illuminate\Database\Eloquent\Builder
  */
