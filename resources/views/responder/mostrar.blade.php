@@ -336,7 +336,7 @@
                                 <div>
                                     <div>
                                         <h2>Dimensión: {{ $grupo['dimension'] }}</h2>
-                                        <p>{{ $grupo['dimension_descripcion'] }}</p>
+                                        <p>{!! $grupo['dimension_descripcion'] !!}</p>
                                     </div>
                                 </div>
 

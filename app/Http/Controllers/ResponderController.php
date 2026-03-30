@@ -357,7 +357,7 @@ class ResponderController extends Controller
 
             $preguntas = Pregunta::where('id_encuesta', $idEncuesta)
                 ->where('id_subdimension', $subid)
-                ->with('alternativas') // Cargar las alternativas de cada pregunta
+                ->with(['alternativas','respuestaUsuario']) // Cargar las alternativas de cada pregunta
                 ->orderBy('posicion')   // Ordenar las preguntas por su posición
                 ->get();
 

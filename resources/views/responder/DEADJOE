@@ -1,0 +1,32 @@
+
+*** These modified files were found in JOE when it aborted on Wed Dec 17 22:30:33 2025
+*** JOE was aborted because the terminal closed
+
+*** File '(Unnamed)'
+memc
+exten
+=php_mem
+mem
+DEFAULT
+Allow
+max_
+
+*** File '(Unnamed)'
+composer.json
+pruebas2.facso.cl
+default
+diseno.facso.cl.conf
+index.html
+index.html
+001-colab1.facso.cl
+101-intranet.trabajosocialuchile.cl
+wp-config.php
+mostrar_agrupado.blade.php
+mostrar.blade.php
+mostrar.blade.php
+
+*** File '* Startup Log *'
+Processing '/etc/joe/joerc'...
+Processing '/etc/joe/ftyperc'...
+Finished processing /etc/joe/ftyperc
+Finished processing /etc/joe/joerc
