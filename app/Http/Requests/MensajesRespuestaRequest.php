@@ -11,7 +11,12 @@ class MensajesRespuestaRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return true;
+        $respuestaId = $this->route('mensajesRespuesta') ?? $this->route('id');
+        if ($respuestaId) {
+            $respuesta = \App\Models\MensajesRespuesta::find($respuestaId);
+            return $respuesta && $this->user()->can($this->isMethod('PUT') || $this->isMethod('PATCH') ? 'update' : ($this->isMethod('DELETE') ? 'delete' : 'view'), $respuesta);
+        }
+        return $this->user()->can('create', \App\Models\MensajesRespuesta::class);
     }
 
     /**

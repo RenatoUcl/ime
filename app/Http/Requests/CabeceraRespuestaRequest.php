@@ -11,7 +11,12 @@ class CabeceraRespuestaRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return true;
+        $cabeceraId = $this->route('cabeceraRespuesta') ?? $this->route('id');
+        if ($cabeceraId) {
+            $cabecera = \App\Models\CabeceraRespuesta::find($cabeceraId);
+            return $cabecera && $this->user()->can($this->isMethod('PUT') || $this->isMethod('PATCH') ? 'update' : ($this->isMethod('DELETE') ? 'delete' : 'view'), $cabecera);
+        }
+        return $this->user()->can('create', \App\Models\CabeceraRespuesta::class);
     }
 
     /**

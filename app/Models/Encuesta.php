@@ -3,27 +3,13 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Traits\Auditable;
 
-/**
- * Class Encuesta
- *
- * @property $id
- * @property $id_linea
- * @property $nombre
- * @property $descripcion
- * @property $estado
- * @property $created_at
- * @property $updated_at
- *
- * @property CabeceraPregunta[] $cabeceraPreguntas
- * @property EncuestasArchivo[] $encuestasArchivos
- * @property EncuestasUsuario[] $encuestasUsuarios
- * @property Pregunta[] $preguntas
- * @package App
- * @mixin \Illuminate\Database\Eloquent\Builder
- */
 class Encuesta extends Model
-{    
+{
+    use SoftDeletes, Auditable;
+
     protected $perPage = 20;
 
     /**

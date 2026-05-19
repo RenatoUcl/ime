@@ -11,7 +11,12 @@ class MensajesArchivoRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return true;
+        $archivoId = $this->route('mensajesArchivo') ?? $this->route('id');
+        if ($archivoId) {
+            $archivo = \App\Models\MensajesArchivo::find($archivoId);
+            return $archivo && $this->user()->can($this->isMethod('PUT') || $this->isMethod('PATCH') ? 'update' : ($this->isMethod('DELETE') ? 'delete' : 'view'), $archivo);
+        }
+        return $this->user()->can('create', \App\Models\MensajesArchivo::class);
     }
 
     /**

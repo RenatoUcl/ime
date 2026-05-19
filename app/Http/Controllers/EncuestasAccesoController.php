@@ -53,17 +53,28 @@ class EncuestasAccesoController extends Controller
             ->orderBy('id_usuario')
             ->paginate(20);
 
-        // 2. Cargar relaciones completas SOLO de la página actual
+        // 2. Cargar relaciones completas SOLO de la página actual (batch query)
+        $usuarioEncuestaPairs = $accesosBase->map(fn($row) => [$row->id_usuario, $row->id_encuesta])->toArray();
+
         $accesos = collect();
 
-        foreach ($accesosBase as $row) {
-            $grupo = EncuestaUsuarioDimension::with(['usuario', 'encuesta', 'dimension'])
-                ->where('id_usuario', $row->id_usuario)
-                ->where('id_encuesta', $row->id_encuesta)
-                ->orderBy('orden')
-                ->get();
+        if (!empty($usuarioEncuestaPairs)) {
+            $idsUsuarios = $accesosBase->pluck('id_usuario')->unique()->toArray();
+            $idsEncuestas = $accesosBase->pluck('id_encuesta')->unique()->toArray();
 
-            $accesos->push($grupo);
+            $todosLosRegistros = EncuestaUsuarioDimension::with(['usuario', 'encuesta', 'dimension'])
+                ->whereIn('id_usuario', $idsUsuarios)
+                ->whereIn('id_encuesta', $idsEncuestas)
+                ->orderBy('orden')
+                ->get()
+                ->groupBy(function ($item) {
+                    return $item->id_usuario . '-' . $item->id_encuesta;
+                });
+
+            foreach ($accesosBase as $row) {
+                $key = $row->id_usuario . '-' . $row->id_encuesta;
+                $accesos->push($todosLosRegistros->get($key, collect()));
+            }
         }
 
         return view('encuestas_accesos.index', compact('accesos', 'accesosBase', 'search'));
@@ -218,7 +229,7 @@ class EncuestasAccesoController extends Controller
         $usuarios = User::orderBy('ap_paterno')->orderBy('ap_materno')->orderBy('nombre')->get();
         $encuestas = Encuesta::orderBy('nombre')->get();
         $dimensiones = Dimension::orderBy('id')->get();
-        $accesos = EncuestaUsuarioDimension::all();
+        $accesos = EncuestaUsuarioDimension::with(['usuario', 'encuesta', 'dimension'])->get();
 
         return view('encuestas_accesos.matriz', compact('usuarios', 'encuestas', 'dimensiones', 'accesos'));
     }

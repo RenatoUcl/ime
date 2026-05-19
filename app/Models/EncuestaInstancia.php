@@ -26,4 +26,14 @@ class EncuestaInstancia extends Model
     {
         return $this->belongsTo(Encuesta::class, 'id_encuesta');
     }
+
+    public function respuestas()
+    {
+        return $this->hasMany(Respuesta::class, 'id_encuesta_instancia');
+    }
+
+    public function sesiones()
+    {
+        return $this->hasMany(EncuestasUsuario::class, 'id_encuesta_instancia');
+    }
 }

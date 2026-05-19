@@ -11,7 +11,12 @@ class MensajesEstadoRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return true;
+        $estadoId = $this->route('mensajesEstado') ?? $this->route('id');
+        if ($estadoId) {
+            $estado = \App\Models\MensajesEstado::find($estadoId);
+            return $estado && $this->user()->can($this->isMethod('PUT') || $this->isMethod('PATCH') ? 'update' : ($this->isMethod('DELETE') ? 'delete' : 'view'), $estado);
+        }
+        return $this->user()->can('create', \App\Models\MensajesEstado::class);
     }
 
     /**

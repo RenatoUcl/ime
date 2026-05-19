@@ -11,7 +11,12 @@ class EncuestasUsuarioRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return true;
+        $encuestaUsuarioId = $this->route('encuestasUsuario') ?? $this->route('id');
+        if ($encuestaUsuarioId) {
+            $encuestaUsuario = \App\Models\EncuestasUsuario::find($encuestaUsuarioId);
+            return $encuestaUsuario && $this->user()->can($this->isMethod('PUT') || $this->isMethod('PATCH') ? 'update' : ($this->isMethod('DELETE') ? 'delete' : 'view'), $encuestaUsuario);
+        }
+        return $this->user()->can('create', \App\Models\EncuestasUsuario::class);
     }
 
     /**

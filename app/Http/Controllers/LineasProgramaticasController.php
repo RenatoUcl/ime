@@ -14,10 +14,7 @@ class LineasProgramaticasController extends Controller
 {
     public function index(Request $request): View
     {
-        $user = Auth::user()->load('roles');
-        if (!$user->hasRole('admin')) {
-            abort(403, 'No tienes permiso para acceder a esta sección.');
-        }
+        $this->authorize('viewAny', LineasProgramaticas::class);
 
         $lineas = LineasProgramaticas::paginate();
         return view('linea.index', compact('lineas'))
@@ -26,6 +23,8 @@ class LineasProgramaticasController extends Controller
 
     public function create(): View
     {
+        $this->authorize('create', LineasProgramaticas::class);
+
         $linea = new LineasProgramaticas();
         return view('linea.create', compact('linea'));
     }
@@ -39,23 +38,19 @@ class LineasProgramaticasController extends Controller
 
     public function show($id): View
     {
-        $linea = LineasProgramaticas::find($id);
+        $linea = LineasProgramaticas::findOrFail($id);
         return view('linea.show', compact('linea'));
     }
 
     public function edit($id): View
     {
-        $linea = LineasProgramaticas::find($id);
+        $linea = LineasProgramaticas::findOrFail($id);
         return view('linea.edit', compact('linea'));
     }
 
     public function update(LineasProgramaticasRequest $request, LineasProgramaticas $linea)
     {
-        //$linea->update($request->validated());
-        $linea = LineasProgramaticas::find($request->id);
-        $linea->nombre = $request->nombre;
-        $linea->descripcion = $request->descripcion;
-        $linea->save();
+        $linea->update($request->validated());
 
         return Redirect::route('linea.index')
             ->with('success', 'Linea Programatica actualizada correctamente');
@@ -63,7 +58,8 @@ class LineasProgramaticasController extends Controller
 
     public function destroy($id): RedirectResponse
     {
-        LineasProgramaticas::find($id)->delete();
+        $linea = LineasProgramaticas::findOrFail($id);
+        $linea->delete();
         return Redirect::route('linea.index')
             ->with('success', 'Linea Programatica eliminada correctamente');
     }

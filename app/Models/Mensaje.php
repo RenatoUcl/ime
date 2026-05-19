@@ -50,17 +50,17 @@ class Mensaje extends Model
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
-    public function user()
+    public function userOrigen()
     {
-        return $this->belongsTo(\App\Models\User::class, 'id_usuario_destino', 'id');
+        return $this->belongsTo(\App\Models\User::class, 'id_usuario_origen', 'id');
     }
-    
+
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
-    public function user()
+    public function userDestino()
     {
-        return $this->belongsTo(\App\Models\User::class, 'id_usuario_origen', 'id');
+        return $this->belongsTo(\App\Models\User::class, 'id_usuario_destino', 'id');
     }
     
     /**

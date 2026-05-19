@@ -11,7 +11,12 @@ class ConfiguracionRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return true;
+        $configuracionId = $this->route('configuracion') ?? $this->route('id');
+        if ($configuracionId) {
+            $configuracion = \App\Models\Configuracion::find($configuracionId);
+            return $configuracion && $this->user()->can($this->isMethod('PUT') || $this->isMethod('PATCH') ? 'update' : ($this->isMethod('DELETE') ? 'delete' : 'view'), $configuracion);
+        }
+        return $this->user()->can('create', \App\Models\Configuracion::class);
     }
 
     /**

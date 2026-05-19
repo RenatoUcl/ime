@@ -13,6 +13,8 @@ class DepartamentoController extends Controller
 {
     public function index(Request $request): View
     {
+        $this->authorize('viewAny', Departamento::class);
+
         $departamentos = Departamento::paginate();
         return view('departamento.index', compact('departamentos'))
             ->with('i', ($request->input('page', 1) - 1) * $departamentos->perPage());
@@ -20,6 +22,8 @@ class DepartamentoController extends Controller
 
     public function create(): View
     {
+        $this->authorize('create', Departamento::class);
+
         $departamento = new Departamento();
         return view('departamento.create', compact('departamento'));
     }
@@ -33,13 +37,13 @@ class DepartamentoController extends Controller
 
     public function show($id): View
     {
-        $departamento = Departamento::find($id);
+        $departamento = Departamento::findOrFail($id);
         return view('departamento.show', compact('departamento'));
     }
 
     public function edit($id): View
     {
-        $departamento = Departamento::find($id);
+        $departamento = Departamento::findOrFail($id);
         return view('departamento.edit', compact('departamento'));
     }
 
@@ -52,7 +56,8 @@ class DepartamentoController extends Controller
 
     public function destroy($id): RedirectResponse
     {
-        Departamento::find($id)->delete();
+        $departamento = Departamento::findOrFail($id);
+        $departamento->delete();
         return Redirect::route('departamento.index')
             ->with('success', 'Departamento eliminado correctamente');
     }

@@ -19,7 +19,7 @@ class AlternativaController extends Controller
 {
     public function index(Request $request): View
     {
-        $alternativas = Alternativa::paginate();
+        $alternativas = Alternativa::with('pregunta')->paginate();
         return view('alternativa.index', compact('alternativas'))
             ->with('i', ($request->input('page', 1) - 1) * $alternativas->perPage());
     }
@@ -33,19 +33,19 @@ class AlternativaController extends Controller
     public function store(AlternativaRequest $request): RedirectResponse
     {
         Alternativa::create($request->validated());
-        return Redirect::route('alternativas.index')
-            ->with('success', 'Alternativa created successfully.');
+        return Redirect::route('alternativa.index')
+            ->with('success', 'Alternativa creada satisfactoriamente.');
     }
 
     public function show($id): View
     {
-        $alternativa = Alternativa::find($id);
+        $alternativa = Alternativa::findOrFail($id);
         return view('alternativa.show', compact('alternativa'));
     }
 
     public function edit($id): View
     {
-        $alternativa = Alternativa::find($id);
+        $alternativa = Alternativa::findOrFail($id);
         return view('alternativa.edit', compact('alternativa'));
     }
 
@@ -53,34 +53,36 @@ class AlternativaController extends Controller
     {
         $alternativa->update($request->validated());
         return Redirect::route('encuesta.index')
-            ->with('success', 'Alternativa updated successfully');
+            ->with('success', 'Alternativa actualizada satisfactoriamente');
     }
 
     public function disabled($id): RedirectResponse
     {
-        $item = Alternativa::find($id);
+        $item = Alternativa::findOrFail($id);
         $id_preg = $item->id_pregunta;
         $pregunta = Pregunta::find($id_preg);
-        $id_encuesta = $pregunta->id_encuesta;
-        $respuesta = Respuesta::where('id_pregunta',$id_preg)->get();
-        $count = $respuesta->count();
+        $id_encuesta = $pregunta ? $pregunta->id_encuesta : null;
+        $tieneRespuestas = Respuesta::where('id_pregunta', $id_preg)->exists();
 
-        if ($count > 0){
-            return Redirect::route('encuesta.edit',$id_encuesta)
-            ->with('warning', 'La Alternativa no puede ser eliminada, por que contienen respuestas asociadas.');
+        if ($tieneRespuestas){
+            return $id_encuesta
+                ? Redirect::route('encuesta.edit',$id_encuesta)->with('warning', 'La Alternativa no puede ser eliminada, porque contiene respuestas asociadas.')
+                : Redirect::route('alternativa.index')->with('warning', 'La Alternativa no puede ser eliminada, porque contiene respuestas asociadas.');
         } else {
-            Alternativa::find($id)->delete();
+            $item->delete();
 
-            return Redirect::route('encuesta.edit',$id_encuesta)
-            ->with('success', 'Alternativa eliminada satisfactoriamente');
+            return $id_encuesta
+                ? Redirect::route('encuesta.edit',$id_encuesta)->with('success', 'Alternativa eliminada satisfactoriamente')
+                : Redirect::route('alternativa.index')->with('success', 'Alternativa eliminada satisfactoriamente');
         }
     }
 
     public function destroy($id): RedirectResponse
     {
-        Alternativa::find($id)->delete();
+        $alternativa = Alternativa::findOrFail($id);
+        $alternativa->delete();
 
         return Redirect::route('alternativa.index')
-            ->with('success', 'Alternativa deleted successfully');
+            ->with('success', 'Alternativa eliminada satisfactoriamente');
     }
 }

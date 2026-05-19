@@ -8,18 +8,13 @@ use Illuminate\Http\Request;
 use App\Http\Requests\SubdimensionRequest;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\View\View;
-use Illuminate\Support\Facades\Auth;
 
 class SubdimensionController extends Controller
 {
     public function index(Request $request): View
     {
-        $user = Auth::user()->load('roles');
-        if (!$user->hasRole('admin')) {
-            abort(403, 'No tienes permiso para acceder a esta sección.');
-        }
+        $this->authorize('viewAny', Subdimension::class);
 
-        //$subdimensiones = Subdimension::paginate();
         $subdimensiones = Subdimension::select(
             'subdimensiones.id',
             'subdimensiones.id_dimension',
@@ -40,8 +35,9 @@ class SubdimensionController extends Controller
 
     public function create(): View
     {
-        $subdimension = new Subdimension();
+        $this->authorize('create', Subdimension::class);
 
+        $subdimension = new Subdimension();
         return view('subdimension.create', compact('subdimension'));
     }
 
@@ -55,15 +51,13 @@ class SubdimensionController extends Controller
 
     public function show($id): View
     {
-        $subdimension = Subdimension::find($id);
-
+        $subdimension = Subdimension::findOrFail($id);
         return view('subdimension.show', compact('subdimension'));
     }
 
     public function edit($id): View
     {
-        $subdimension = Subdimension::find($id);
-
+        $subdimension = Subdimension::findOrFail($id);
         return view('subdimension.edit', compact('subdimension'));
     }
 
@@ -77,7 +71,8 @@ class SubdimensionController extends Controller
 
     public function destroy($id): RedirectResponse
     {
-        Subdimension::find($id)->delete();
+        $subdimension = Subdimension::findOrFail($id);
+        $subdimension->delete();
 
         return Redirect::route('subdimension.index')
             ->with('success', 'Subdimension Eliminada satisfactoriamente');

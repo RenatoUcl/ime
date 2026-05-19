@@ -11,7 +11,12 @@ class PreguntaRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return true;
+        $preguntaId = $this->route('pregunta') ?? $this->route('id');
+        if ($preguntaId) {
+            $pregunta = \App\Models\Pregunta::find($preguntaId);
+            return $pregunta && $this->user()->can($this->isMethod('PUT') || $this->isMethod('PATCH') ? 'update' : ($this->isMethod('DELETE') ? 'delete' : 'view'), $pregunta);
+        }
+        return $this->user()->can('create', \App\Models\Pregunta::class);
     }
 
     /**

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Encuesta;
+use App\Models\EncuestaInstancia;
 use App\Models\Dimension;
 use App\Models\Subdimension;
 use App\Models\EncuestasUsuario;
@@ -20,11 +21,12 @@ class EncuestaFlujoController extends Controller
         $userId = Auth::id();
         $encuesta = Encuesta::findOrFail($encuestaId);
 
+        $this->authorize('respond', $encuesta);
+
         // 1) Período activo (HOY)
         $hoy = now()->toDateString();
 
-        $instancia = DB::table('encuestas_instancias')
-            ->where('id_encuesta', $encuestaId)
+        $instancia = EncuestaInstancia::where('id_encuesta', $encuestaId)
             ->whereDate('fecha_desde', '<=', $hoy)
             ->whereDate('fecha_hasta', '>=', $hoy)
             ->where('estado', 1)
@@ -67,8 +69,13 @@ class EncuestaFlujoController extends Controller
             abort(403, 'Usted ya respondió esta encuesta en el Período de aplicación actual.');
         }
 
-        // Total pantallas (dimensiones * 3 subdimensiones)
-        $totalPantallas = count($dimensionesPermitidas) * 3;
+        // Total pantallas: contar subdimensiones reales por dimensión (una sola query)
+        $subdimensiones = Subdimension::whereIn('id_dimension', $dimensionesPermitidas)
+            ->select('id_dimension', DB::raw('COUNT(*) as count'))
+            ->groupBy('id_dimension')
+            ->get();
+
+        $totalPantallas = $subdimensiones->sum('count');
 
         session([
             "flujo_{$encuestaId}_dimensiones" => $dimensionesPermitidas,
@@ -89,6 +96,8 @@ class EncuestaFlujoController extends Controller
 
         $encuesta = Encuesta::findOrFail($encuestaId);
 
+        $this->authorize('respond', $encuesta);
+
         $dimensiones     = session("flujo_{$encuestaId}_dimensiones");
         $totalPantallas  = session("flujo_{$encuestaId}_total");
         $sesionId        = session("flujo_{$encuestaId}_sesion");
@@ -103,17 +112,29 @@ class EncuestaFlujoController extends Controller
         }
 
         // calcular dimensión/subdimensión por grupo
-        $indexGrupo       = $grupo - 1;
-        $indexDimension   = intdiv($indexGrupo, 3);
-        $indexSubdimension = $indexGrupo % 3;
+        $indexGrupo = $grupo - 1;
 
-        $dimensionId = $dimensiones[$indexDimension];
-        $dimension = Dimension::findOrFail($dimensionId);
-
-        $subdimension = Subdimension::where('id_dimension', $dimensionId)
+        // Mapear grupo a dimensión/subdimensión real (una sola query)
+        $dimensionesConSubs = [];
+        $subs = Subdimension::whereIn('id_dimension', $dimensiones)
+            ->orderBy('id_dimension')
             ->orderBy('posicion')
-            ->get()
-            ->get($indexSubdimension);
+            ->get();
+
+        foreach ($subs as $sub) {
+            $dimensionesConSubs[] = [
+                'dimension_id' => $sub->id_dimension,
+                'subdimension' => $sub,
+            ];
+        }
+
+        if (!isset($dimensionesConSubs[$indexGrupo])) {
+            abort(404, 'Grupo no encontrado');
+        }
+
+        $dimensionId = $dimensionesConSubs[$indexGrupo]['dimension_id'];
+        $subdimension = $dimensionesConSubs[$indexGrupo]['subdimension'];
+        $dimension = Dimension::findOrFail($dimensionId);
 
         // Respuestas del usuario SOLO del período activo
         $respuestasUsuario = Respuesta::where('id_usuario', $userId)
@@ -148,6 +169,9 @@ class EncuestaFlujoController extends Controller
     {
         $userId = Auth::id();
 
+        $encuesta = Encuesta::findOrFail($encuestaId);
+        $this->authorize('respond', $encuesta);
+
         $instanciaId = session("flujo_{$encuestaId}_instancia");
         $sesionId    = session("flujo_{$encuestaId}_sesion");
         $total       = session("flujo_{$encuestaId}_total");
@@ -157,10 +181,10 @@ class EncuestaFlujoController extends Controller
         }
 
         $request->validate([
-            'pregunta_id'    => 'required|exists:preguntas,id',
-            'alternativa_id' => 'required', // puede venir como ID real (dep) o ID normal
+            'pregunta_id'    => 'required|integer|exists:preguntas,id',
+            'alternativa_id' => 'required|integer',
             'grupo'          => 'required|integer',
-            'valor'          => 'nullable|integer', // para SI/NO dependiente enviamos 1/0
+            'valor'          => 'nullable|integer',
         ]);
 
         $preguntaId = (int) $request->pregunta_id;
@@ -171,8 +195,7 @@ class EncuestaFlujoController extends Controller
         if ($request->has('valor') && $request->valor !== null) {
             $valor = (int) $request->valor;
         } else {
-            $alt = Alternativa::find($altId);
-            $valor = $alt ? (int)$alt->valor : 0;
+            $valor = Alternativa::where('id', $altId)->value('valor') ?? 0;
         }
 
         // Guardar sin duplicados por (encuesta, instancia, usuario, pregunta)
@@ -210,6 +233,9 @@ class EncuestaFlujoController extends Controller
     public function finalizar($encuestaId)
     {
         $userId = Auth::id();
+
+        $encuesta = Encuesta::findOrFail($encuestaId);
+        $this->authorize('respond', $encuesta);
 
         $instanciaId = session("flujo_{$encuestaId}_instancia");
         $sesionId    = session("flujo_{$encuestaId}_sesion");

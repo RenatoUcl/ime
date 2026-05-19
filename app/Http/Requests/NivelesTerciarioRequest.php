@@ -11,7 +11,12 @@ class NivelesTerciarioRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return true;
+        $nivelId = $this->route('nivelesTerciario') ?? $this->route('id');
+        if ($nivelId) {
+            $nivel = \App\Models\NivelesTerciario::find($nivelId);
+            return $nivel && $this->user()->can($this->isMethod('PUT') || $this->isMethod('PATCH') ? 'update' : ($this->isMethod('DELETE') ? 'delete' : 'view'), $nivel);
+        }
+        return $this->user()->can('create', \App\Models\NivelesTerciario::class);
     }
 
     /**

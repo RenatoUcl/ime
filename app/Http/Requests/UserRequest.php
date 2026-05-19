@@ -11,7 +11,7 @@ class UserRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return true;
+        return $this->user()->can('create', \App\Models\User::class);
     }
 
     /**
@@ -22,13 +22,13 @@ class UserRequest extends FormRequest
     public function rules(): array
     {
         return [
-			'email' => 'required|string',
-			'nombre' => 'required|string',
-			'ap_paterno' => 'required|string',
-			'ap_materno' => 'required|string',
-			'telefono' => 'required|string',
-            'password' => 'required|min:6',
-			'estado' => 'required',
+			'email' => 'required|email|unique:users,email',
+			'nombre' => 'required|string|max:255',
+			'ap_paterno' => 'required|string|max:255',
+			'ap_materno' => 'required|string|max:255',
+			'telefono' => 'nullable|string|max:20',
+            'password' => 'required|min:8|confirmed',
+			'estado' => 'boolean',
         ];
     }
 }

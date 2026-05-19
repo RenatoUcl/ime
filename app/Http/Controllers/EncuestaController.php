@@ -26,11 +26,9 @@ class EncuestaController extends Controller
 
     public function index(Request $request): View
     {
-        $user = Auth::user()->load('roles');
-        if (!$user->hasRole('admin')) {
-            abort(403, 'No tienes permiso para acceder a esta sección.');
-        }
-        $encuestas = Encuesta::paginate();
+        $this->authorize('viewAny', Encuesta::class);
+
+        $encuestas = Encuesta::with('linea')->paginate();
 
         return view('encuesta.index', compact('encuestas'))
             ->with('i', ($request->input('page', 1) - 1) * $encuestas->perPage());
@@ -45,22 +43,21 @@ class EncuestaController extends Controller
 
     public function store(EncuestaRequest $request): RedirectResponse
     {
-        Encuesta::create($request->validated());
-        $lastid = Encuesta::latest()->first()->id;
+        $encuesta = Encuesta::create($request->validated());
 
-        return Redirect::route('encuesta.edit', $lastid)
-            ->with('success', 'Encuesta created successfully.');
+        return Redirect::route('encuesta.edit', $encuesta->id)
+            ->with('success', 'Encuesta creada satisfactoriamente.');
     }
 
     public function show($id): View
     {
-        $encuesta = Encuesta::find($id);
+        $encuesta = Encuesta::findOrFail($id);
         return view('encuesta.show', compact('encuesta'));
     }
 
     public function edit($id): View
     {
-        $encuesta = Encuesta::find($id);
+        $encuesta = Encuesta::findOrFail($id);
         $lineas = LineasProgramaticas::with('dimensiones.subdimensiones')->where('id',$encuesta->id_linea)->get();
         $dimensiones = Dimension::where('id_linea', $encuesta->id_linea)->with('subdimensiones')->get();
         $subdimensiones = $dimensiones->flatMap(function ($dimension) {
@@ -84,40 +81,33 @@ class EncuestaController extends Controller
             ->orderBy('preguntas.id','ASC')
             ->orderBy('preguntas.posicion','ASC')
             ->get();
-        
-        foreach($preguntas as $indice => $preg){
-            $idp[] = $preg->id;
-        }
-        if (isset($idp)){
-            $alternativas = Alternativa::all()->whereIn('id_pregunta', $idp);
+
+        $idp = $preguntas->pluck('id')->toArray();
+
+        if (!empty($idp)) {
+            $alternativas = Alternativa::whereIn('id_pregunta', $idp)->get();
         } else {
-            $alternativas = null;
+            $alternativas = collect();
         }
 
-        $cabeceras = CabeceraPregunta::all()->where('id_encuesta', $id);
+        $cabeceras = CabeceraPregunta::where('id_encuesta', $id)->get();
 
-        foreach ($cabeceras as $item => $valor) {
-            $ida[] = $valor->id;
-        }
+        $ida = $cabeceras->pluck('id')->toArray();
 
-        if (isset($ida)) {
-            $cabeceras_alternativas = CabeceraAlternativa::all()->whereIn('id_cabecera', $ida);
+        if (!empty($ida)) {
+            $cabeceras_alternativas = CabeceraAlternativa::whereIn('id_cabecera', $ida)->get();
         } else {
-            $cabeceras_alternativas = null;
+            $cabeceras_alternativas = collect();
         }
 
         return view('encuesta.edit', compact('encuesta', 'lineas', 'dimensiones', 'subdimensiones', 'preguntas', 'alternativas', 'cabeceras', 'cabeceras_alternativas'));
     }
 
-    public function update(EncuestaRequest $request, $encuesta):RedirectResponse
+    public function update(EncuestaRequest $request, $id): RedirectResponse
     {
-        //$encuesta->update($request->validated());
-        // ID Encuesta
-        $lastid = $request->id;
+        $encuesta = Encuesta::findOrFail($id);
 
         if ($request->input('action') === 'actualizar_pregunta'){
-            
-            $encuesta = Encuesta::find($lastid);
             $encuesta->nombre = $request->nombre;
             $encuesta->descripcion = $request->descripcion;
             $encuesta->estado = $request->estado;
@@ -126,7 +116,7 @@ class EncuestaController extends Controller
         }
         if ($request->input('action') === 'crear_pregunta') {
             $pregunta = new Pregunta();
-            $pregunta->id_encuesta = $lastid;
+            $pregunta->id_encuesta = $encuesta->id;
             $pregunta->id_subdimension = $request->id_subdimension;
             $pregunta->texto = $request->preguntax;
             $pregunta->tipo = $request->tipo;
@@ -135,19 +125,21 @@ class EncuestaController extends Controller
             $pregunta->save();
         }
         if ($request->input('action') === 'crear_alternativa') {
-            $alternativa = new Alternativa();
+            $alterTextos = $request->alternativa ?? [];
+            $idPregs = $request->idpreg ?? [];
+            $puntajes = $request->puntaje ?? [];
+            $adependes = $request->adepende ?? [];
 
-            $alter = $request->alternativa;
-            foreach ($alter as $item) {
-                if ($item != NULL) {
-                    $pos = array_search($item, $alter);
+            foreach ($alterTextos as $index => $texto) {
+                if ($texto !== null && $texto !== '') {
+                    $alternativa = new Alternativa();
+                    $alternativa->id_pregunta = $idPregs[$index] ?? 0;
+                    $alternativa->texto = $texto;
+                    $alternativa->valor = $puntajes[$index] ?? 0;
+                    $alternativa->id_dependencia = $adependes[$index] ?? 0;
+                    $alternativa->save();
                 }
             }
-            $alternativa->id_pregunta = $request->idpreg[$pos];
-            $alternativa->texto = $request->alternativa[$pos];
-            $alternativa->valor = $request->puntaje[$pos];
-            $alternativa->id_dependencia = $request->adepende[$pos];
-            $alternativa->save();
         }
 
         if ($request->input('action') === 'editar_alternativa') {
@@ -164,43 +156,41 @@ class EncuestaController extends Controller
                 }
             }
 
-            return Redirect::route('encuesta.edit', $lastid)
+            return Redirect::route('encuesta.edit', $encuesta->id)
                 ->with('success', 'Alternativa actualizada correctamente.');
         }
 
         if ($request->input('action') === 'crear_cabecera') {
-            $cabecera = new CabeceraPregunta();
 
             if ($request->ctipo != 0) {
-                $cabecera->id_encuesta = $lastid;
+                $cabecera = new CabeceraPregunta();
+                $cabecera->id_encuesta = $encuesta->id;
                 $cabecera->tipo = $request->ctipo;
                 $cabecera->pregunta = $request->cpregunta;
                 $cabecera->estado = $request->estado;
                 $cabecera->save();
 
-                if ($request->ctipo == 1) {
-                    $lastcab = CabeceraPregunta::latest()->first()->id;
-
+                if ($request->ctipo == 1 && $request->has('calter')) {
                     foreach ($request->calter as $indice => $calter) {
                         $cabecera_alternativa = new CabeceraAlternativa();
-                        $cabecera_alternativa->id_cabecera = $lastcab;
+                        $cabecera_alternativa->id_cabecera = $cabecera->id;
                         $cabecera_alternativa->pregunta = $calter;
                         $cabecera_alternativa->orden = $indice;
                         $cabecera_alternativa->save();
                     }
                 } else {
-                    return Redirect::route('encuesta.edit', $lastid)
+                    return Redirect::route('encuesta.edit', $encuesta->id)
                         ->with('success', 'No se ha registrado cambios');
                 }
             }
         }
-        return Redirect::route('encuesta.edit', $lastid)
-            ->with('success', 'Encuesta updated successfully');
+        return Redirect::route('encuesta.edit', $encuesta->id)
+            ->with('success', 'Encuesta actualizada satisfactoriamente');
     }
 
     public function disabled($id): RedirectResponse
     {
-        $item = Encuesta::find($id);
+        $item = Encuesta::findOrFail($id);
         $item->estado = 0;
         $item->save();
 
@@ -213,117 +203,70 @@ class EncuestaController extends Controller
         DB::beginTransaction();
 
         try {
-            /* ======================================================
-            * 1. CLONAR ENCUESTA
-            * ====================================================== */
-            $encuesta = DB::table('encuestas')->where('id', $idEncuestaOriginal)->first();
+            $encuesta = Encuesta::findOrFail($idEncuestaOriginal);
 
-            if (!$encuesta) {
-                abort(404, 'Encuesta no encontrada');
-            }
-
-            $nuevaEncuestaId = DB::table('encuestas')->insertGetId([
+            $nuevaEncuesta = Encuesta::create([
                 'id_linea'   => $encuesta->id_linea,
                 'nombre'     => $encuesta->nombre . ' (Copia)',
                 'descripcion'=> $encuesta->descripcion,
-                'estado'     => 0, // IMPORTANTE: clonada queda desactivada
-                'created_at' => now(),
-                'updated_at' => now(),
+                'estado'     => 0,
             ]);
 
-            /* ======================================================
-            * 2. CLONAR PREGUNTAS (SIN DEPENDENCIAS AÚN)
-            * ====================================================== */
-            $preguntas = DB::table('preguntas')
-                ->where('id_encuesta', $idEncuestaOriginal)
-                ->get();
+            $nuevaEncuestaId = $nuevaEncuesta->id;
+
+            $preguntas = Pregunta::where('id_encuesta', $idEncuestaOriginal)->get();
 
             $mapPreguntas = [];
 
             foreach ($preguntas as $pregunta) {
-                $nuevaPreguntaId = DB::table('preguntas')->insertGetId([
+                $nuevaPregunta = Pregunta::create([
                     'id_encuesta'     => $nuevaEncuestaId,
                     'id_subdimension' => $pregunta->id_subdimension,
                     'tipo'            => $pregunta->tipo,
                     'texto'           => $pregunta->texto,
                     'posicion'        => $pregunta->posicion,
                     'id_dependencia'  => null,
-                    'created_at'      => now(),
-                    'updated_at'      => now(),
                 ]);
 
-                $mapPreguntas[$pregunta->id] = $nuevaPreguntaId;
+                $mapPreguntas[$pregunta->id] = $nuevaPregunta->id;
             }
 
-            /* ======================================================
-            * 3. ACTUALIZAR DEPENDENCIAS ENTRE PREGUNTAS
-            * ====================================================== */
             foreach ($preguntas as $pregunta) {
                 if ($pregunta->id_dependencia && isset($mapPreguntas[$pregunta->id_dependencia])) {
-                    DB::table('preguntas')
-                        ->where('id', $mapPreguntas[$pregunta->id])
+                    Pregunta::where('id', $mapPreguntas[$pregunta->id])
                         ->update([
                             'id_dependencia' => $mapPreguntas[$pregunta->id_dependencia]
                         ]);
                 }
             }
 
-            /* ======================================================
-            * 4. CLONAR ALTERNATIVAS (2 PASADAS, SIN NULL)
-            * ====================================================== */
-
             $mapAlternativas = [];
 
-            /*
-            * 4.1 Primera pasada: crear alternativas SIN dependencias
-            *     (id_dependencia = 0 SIEMPRE)
-            */
             foreach ($mapPreguntas as $oldPreguntaId => $newPreguntaId) {
-
-                $alternativas = DB::table('alternativas')
-                    ->where('id_pregunta', $oldPreguntaId)
-                    ->get();
+                $alternativas = Alternativa::where('id_pregunta', $oldPreguntaId)->get();
 
                 foreach ($alternativas as $alt) {
-
-                    $newAltId = DB::table('alternativas')->insertGetId([
+                    $newAlt = Alternativa::create([
                         'id_pregunta'    => $newPreguntaId,
-                        'id_dependencia' => 0, // 👈 CLAVE
+                        'id_dependencia' => 0,
                         'texto'          => $alt->texto,
                         'valor'          => $alt->valor,
-                        'created_at'     => now(),
-                        'updated_at'     => now(),
                     ]);
 
-                    $mapAlternativas[$alt->id] = $newAltId;
+                    $mapAlternativas[$alt->id] = $newAlt->id;
                 }
             }
 
-            /*
-            * 4.2 Segunda pasada: actualizar dependencias reales
-            */
             foreach ($mapAlternativas as $oldAltId => $newAltId) {
-
-                $altOriginal = DB::table('alternativas')
-                    ->where('id', $oldAltId)
-                    ->first();
+                $altOriginal = Alternativa::find($oldAltId);
 
                 if ($altOriginal && (int)$altOriginal->id_dependencia > 0) {
-
-                    DB::table('alternativas')
-                        ->where('id', $newAltId)
+                    Alternativa::where('id', $newAltId)
                         ->update([
                             'id_dependencia' => $mapAlternativas[$altOriginal->id_dependencia] ?? 0
                         ]);
                 }
             }
-
-            /* ======================================================
-            * 5. IMPORTANTE: NO CLONAR PERÍODOS NI RESPUESTAS
-            * ====================================================== */
-            // encuestas_instancias → NO
-            // encuestas_usuarios   → NO
-            // respuestas           → NO
 
             DB::commit();
 
@@ -343,10 +286,11 @@ class EncuestaController extends Controller
 
     public function destroy($id): RedirectResponse
     {
-        Encuesta::find($id)->delete();
+        $encuesta = Encuesta::findOrFail($id);
+        $encuesta->delete();
 
         return Redirect::route('encuesta.index')
-            ->with('success', 'Encuesta deleted successfully');
+            ->with('success', 'Encuesta eliminada satisfactoriamente');
     }
 
 }

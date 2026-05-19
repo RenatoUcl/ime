@@ -16,7 +16,7 @@ class MensajeController extends Controller
      */
     public function index(Request $request): View
     {
-        $mensajes = Mensaje::paginate();
+        $mensajes = Mensaje::with(['mensajesEstado', 'userOrigen', 'userDestino'])->paginate();
 
         return view('mensaje.index', compact('mensajes'))
             ->with('i', ($request->input('page', 1) - 1) * $mensajes->perPage());
@@ -40,7 +40,7 @@ class MensajeController extends Controller
         Mensaje::create($request->validated());
 
         return Redirect::route('mensajes.index')
-            ->with('success', 'Mensaje created successfully.');
+            ->with('success', 'Mensaje creado satisfactoriamente.');
     }
 
     /**
@@ -48,7 +48,7 @@ class MensajeController extends Controller
      */
     public function show($id): View
     {
-        $mensaje = Mensaje::find($id);
+        $mensaje = Mensaje::findOrFail($id);
 
         return view('mensaje.show', compact('mensaje'));
     }
@@ -58,7 +58,7 @@ class MensajeController extends Controller
      */
     public function edit($id): View
     {
-        $mensaje = Mensaje::find($id);
+        $mensaje = Mensaje::findOrFail($id);
 
         return view('mensaje.edit', compact('mensaje'));
     }
@@ -71,14 +71,15 @@ class MensajeController extends Controller
         $mensaje->update($request->validated());
 
         return Redirect::route('mensajes.index')
-            ->with('success', 'Mensaje updated successfully');
+            ->with('success', 'Mensaje actualizado satisfactoriamente');
     }
 
     public function destroy($id): RedirectResponse
     {
-        Mensaje::find($id)->delete();
+        $mensaje = Mensaje::findOrFail($id);
+        $mensaje->delete();
 
         return Redirect::route('mensajes.index')
-            ->with('success', 'Mensaje deleted successfully');
+            ->with('success', 'Mensaje eliminado satisfactoriamente');
     }
 }

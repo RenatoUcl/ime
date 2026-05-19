@@ -17,12 +17,9 @@ class RolesController extends Controller
 {
     public function index(Request $request): View
     {
-        $user = auth()->user()->load('roles');
-        if (!$user->hasRole('admin')) {
-            abort(403, 'No tienes permiso para acceder a esta sección.');
-        }
-        
-        $roles = Roles::paginate();
+        $this->authorize('viewAny', Roles::class);
+
+        $roles = Roles::withCount('permisos')->paginate();
         return view('role.index', compact('roles'))
             ->with('i', ($request->input('page', 1) - 1) * $roles->perPage());
     }
@@ -37,7 +34,7 @@ class RolesController extends Controller
     {
         $role = Roles::create($request->only(['nombre', 'descripcion']));
         if ($request->has('permissions')) {
-            $role->permissions()->sync($request->permissions);
+            $role->permisos()->sync($request->permissions);
         }
         return $role;
     }
@@ -46,26 +43,26 @@ class RolesController extends Controller
     {
         $role->update($request->only(['nombre', 'descripcion']));
         if ($request->has('permissions')) {
-            $role->permissions()->sync($request->permissions);
+            $role->permisos()->sync($request->permissions);
         }
         return $role;
     }
 
     public function show($id): View
     {
-        $role = Roles::find($id);
+        $role = Roles::findOrFail($id);
         return view('role.show', compact('role'));
     }
 
     public function edit($id): View
     {
-        $role = Roles::find($id);
+        $role = Roles::findOrFail($id);
         return view('role.edit', compact('role'));
     }
 
     public function disabled($id): RedirectResponse
     {
-        $rol = Roles::find($id);
+        $rol = Roles::findOrFail($id);
         $rol->estado = 0;
         $rol->save();
         return Redirect::route('role.index')
@@ -74,9 +71,10 @@ class RolesController extends Controller
 
     public function destroy($id): RedirectResponse
     {
-        Roles::find($id)->delete();
+        $role = Roles::findOrFail($id);
+        $role->delete();
         return Redirect::route('role.index')
-            ->with('success', 'Role deleted successfully');
+            ->with('success', 'Rol eliminado satisfactoriamente');
     }
 
     public function mostrar($id)

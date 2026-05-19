@@ -33,14 +33,19 @@ use Illuminate\Support\Facades\Route;
 Route::middleware("guest")->group(function (){
     // Login
     Route::get('/',[AuthController::class, 'index'])->name('login');
-    Route::post('/validar',[AuthController::class, 'validar'])->name('validar');
+    Route::post('/validar',[AuthController::class, 'validar'])
+        ->name('validar')
+        ->middleware('throttle:5,1');
 });
 
 Route::middleware("auth")->group(function (){
-    // Registro
-    Route::get('/registro',[AuthController::class, 'registro'])
-        ->name('registro');
-    Route::post('/registrar',[AuthController::class, 'registrar'])->name('registrar');
+    // Registro (solo admin)
+    Route::middleware('rol:admin')->group(function () {
+        Route::get('/registro',[AuthController::class, 'registro'])
+            ->name('registro');
+        Route::post('/registrar',[AuthController::class, 'registrar'])
+            ->name('registrar');
+    });
 
     // Home & Dashboard
     Route::get('/home',[AuthController::class, 'home'])->name('home');
@@ -73,7 +78,6 @@ Route::middleware("auth")->group(function (){
         Route::get('/roles/mostrar/{id}', 'mostrar')->name('role.mostrar');
         Route::put('/roles/asignar/{id}', 'asignar')->name('role.asignar');
         Route::get('roles/{id}/permisos', 'verPermisos')->name('roles.permisos');
-        //Route::delete('/roles/destroy/{id}', 'destroy')->name('role.destroy');
     });
 
     // Permisos
@@ -85,7 +89,6 @@ Route::middleware("auth")->group(function (){
         Route::get('/permisos/edit/{id}', 'edit')->name('permiso.edit');
         Route::put('/permisos/update/{permiso}', 'update')->name('permiso.update');
         Route::put('/permisos/disabled/{id}', 'disabled')->name('permiso.disabled');
-        //Route::delete('/permisos/destroy/{id}', 'destroy')->name('permisos.destroy');
     });
 
     // Cargo
@@ -97,7 +100,6 @@ Route::middleware("auth")->group(function (){
         Route::get('/cargos/edit/{id}', 'edit')->name('cargo.edit');
         Route::put('/cargos/update/{id}', 'update')->name('cargo.update');
         Route::put('/cargos/disabled/{id}', 'disabled')->name('cargo.disabled');
-        //Route::delete('/cargos/destroy/{id}', 'destroy')->name('cargo.destroy');
     });
 
     // Departamentos
@@ -109,7 +111,6 @@ Route::middleware("auth")->group(function (){
         Route::get('/departamentos/edit/{id}', 'edit')->name('departamento.edit');
         Route::put('/departamentos/update/{id}', 'update')->name('departamento.update');
         Route::put('/departamentos/disabled/{id}', 'disabled')->name('departamento.disabled');
-        //Route::delete('/departamentos/destroy/{id}', 'destroy')->name('departamento.destroy');
     });
 
     // Lineas Programaticas
@@ -133,7 +134,6 @@ Route::middleware("auth")->group(function (){
         Route::get('/dimension/edit/{id}', 'edit')->name('dimension.edit');
         Route::put('/dimension/update/{id}', 'update')->name('dimension.update');
         Route::put('/dimension/disabled/{id}', 'disabled')->name('dimension.disabled');
-        //Route::delete('/dimension/destroy/{id}', 'destroy')->name('dimension.destroy');
     });
 
     // Subdimensiones
@@ -145,7 +145,6 @@ Route::middleware("auth")->group(function (){
         Route::get('/subdimension/edit/{id}', 'edit')->name('subdimension.edit');
         Route::put('/subdimension/update/{subdimension}', 'update')->name('subdimension.update');
         Route::put('/subdimension/disabled/{id}', 'disabled')->name('subdimension.disabled');
-        //Route::delete('/subdimension/destroy/{id}', 'destroy')->name('subdimension.destroy');
     });
 
     // Niveles Primarios
@@ -157,7 +156,6 @@ Route::middleware("auth")->group(function (){
         Route::get('/niveles-primario/edit/{id}', 'edit')->name('niveles-primario.edit');
         Route::put('/niveles-primario/update/{id}', 'update')->name('niveles-primario.update');
         Route::put('/niveles-primario/disabled/{id}', 'disabled')->name('niveles-primario.disabled');
-        //Route::delete('/niveles-primario/destroy/{id}', 'destroy')->name('niveles-primario.destroy');
     });
 
     // Niveles Secundarios
@@ -169,7 +167,6 @@ Route::middleware("auth")->group(function (){
         Route::get('/niveles-secundario/edit/{id}', 'edit')->name('niveles-secundario.edit');
         Route::put('/niveles-secundario/update/{id}', 'update')->name('niveles-secundario.update');
         Route::put('/niveles-secundario/disabled/{id}', 'disabled')->name('niveles-secundario.disabled');
-        //Route::delete('/niveles-secundario/destroy/{id}', 'destroy')->name('niveles-secundario.destroy');
     });
 
     // Niveles Terciarios
@@ -181,7 +178,6 @@ Route::middleware("auth")->group(function (){
         Route::get('/niveles-terciario/edit/{id}', 'edit')->name('niveles-terciario.edit');
         Route::put('/niveles-terciario/update/{id}', 'update')->name('niveles-terciario.update');
         Route::put('/niveles-terciario/disabled/{id}', 'disabled')->name('niveles-terciario.disabled');
-        //Route::delete('/niveles-terciario/destroy/{id}', 'destroy')->name('niveles-terciario.destroy');
     });
 
     // Encuesta
@@ -205,7 +201,6 @@ Route::middleware("auth")->group(function (){
         Route::get('/cabecera-pregunta/edit/{id}', 'edit')->name('cabecera-pregunta.edit');
         Route::put('/cabecera-pregunta/update/{id}', 'update')->name('cabecera-pregunta.update');
         Route::put('/cabecera-pregunta/disabled/{id}', 'disabled')->name('cabecera-pregunta.disabled');
-        //Route::delete('/cabecera-pregunta/destroy/{id}', 'destroy')->name('cabecera-pregunta.destroy');
     });
 
     // Cabecera Alternativa
@@ -217,7 +212,6 @@ Route::middleware("auth")->group(function (){
         Route::get('/cabecera-alternativa/edit/{id}', 'edit')->name('cabecera-alternativa.edit');
         Route::put('/cabecera-alternativa/update/{id}', 'update')->name('cabecera-alternativa.update');
         Route::put('/cabecera-alternativa/disabled/{id}', 'disabled')->name('cabecera-alternativa.disabled');
-        //Route::delete('/cabecera-alternativa/destroy/{id}', 'destroy')->name('cabecera-alternativa.destroy');
     });
 
     // Cabecera Respuesta
@@ -229,7 +223,6 @@ Route::middleware("auth")->group(function (){
         Route::get('/cabecera-respuesta/edit/{id}', 'edit')->name('cabecera-respuesta.edit');
         Route::put('/cabecera-respuesta/update/{id}', 'update')->name('cabecera-respuesta.update');
         Route::put('/cabecera-respuesta/disabled/{id}', 'disabled')->name('cabecera-respuesta.disabled');
-        //Route::delete('/cabecera-respuesta/destroy/{id}', 'destroy')->name('cabecera-respuesta.destroy');
     });
 
     // Encuesta Pregunta
@@ -241,7 +234,6 @@ Route::middleware("auth")->group(function (){
         Route::get('/pregunta/edit/{id}', 'edit')->name('pregunta.edit');
         Route::put('/pregunta/update/{id}', 'update')->name('pregunta.update');
         Route::get('/pregunta/disabled/{id}', 'disabled')->name('pregunta.disabled');
-        //Route::delete('/pregunta/destroy/{id}', 'destroy')->name('pregunta.destroy');
     });
 
     // Encuesta Alternativa
@@ -253,7 +245,6 @@ Route::middleware("auth")->group(function (){
         Route::get('/alternativa/edit/{id}', 'edit')->name('alternativa.edit');
         Route::put('/alternativa/update/{alternativa}', 'update')->name('alternativa.update');
         Route::get('/alternativa/disabled/{id}', 'disabled')->name('alternativa.disabled');
-        //Route::delete('/alternativa/destroy/{id}', 'destroy')->name('alternativa.destroy');
     });
 
     // Encuesta Respuesta
@@ -278,8 +269,6 @@ Route::middleware("auth")->group(function (){
 
     Route::controller(IndiceMultiController::class)
         ->group(function(){
-            //Route::get('/indice','index')->name('indice.index');
-            //Route::get('/indice/{idEncuesta}/{idDimension}', 'detalle')->name('indice.detalle');
             Route::get('/indice', 'index')->name('indice.index');
             Route::post('/indice/resultados', 'resultados')->name('indice.resultados');
             Route::post('/indice/comparar', 'comparar')->name('indice.comparar');
@@ -311,7 +300,7 @@ Route::middleware("auth")->group(function (){
         Route::get('/encuestas/{encuestaId}/flujo/grupo/{grupo}', 'showGrupo')->name('encuestas.flujo.grupo');
         Route::get('/encuestas/{encuestaId}/flujo', 'start')->name('encuestas.flujo.start');
         Route::post('/encuestas/{encuestaId}/fluir/guardar', 'guardarRespuestaAjax')->name('encuestas.flujo.guardar');
-        Route::get('/encuestas/{encuestaId}/fluir/finalizar}','finalizar')->name('encuestas.flujo.finalizar');
+        Route::get('/encuestas/{encuestaId}/fluir/finalizar','finalizar')->name('encuestas.flujo.finalizar');
     });
 
     Route::get('/encuestas/accesos-matriz', [EncuestasAccesoController::class, 'matriz'])->name('encuestas.accesos.matriz');

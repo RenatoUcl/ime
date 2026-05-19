@@ -11,7 +11,12 @@ class AlternativaRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return true;
+        $alternativaId = $this->route('alternativa') ?? $this->route('id');
+        if ($alternativaId) {
+            $alternativa = \App\Models\Alternativa::find($alternativaId);
+            return $alternativa && $this->user()->can($this->isMethod('PUT') || $this->isMethod('PATCH') ? 'update' : ($this->isMethod('DELETE') ? 'delete' : 'view'), $alternativa);
+        }
+        return $this->user()->can('create', \App\Models\Alternativa::class);
     }
 
     /**

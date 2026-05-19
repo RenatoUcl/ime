@@ -14,10 +14,8 @@ class PermisoController extends Controller
 {
     public function index(Request $request): View
     {
-        $user = Auth::user()->load('roles');
-        if (!$user->hasRole('admin')) {
-            abort(403, 'No tienes permiso para acceder a esta sección.');
-        }
+        $this->authorize('viewAny', Permiso::class);
+
         $permisos = Permiso::paginate();
         return view('permiso.index', compact('permisos'))
             ->with('i', ($request->input('page', 1) - 1) * $permisos->perPage());
@@ -25,6 +23,8 @@ class PermisoController extends Controller
 
     public function create(): View
     {
+        $this->authorize('create', Permiso::class);
+
         $permiso = new Permiso();
         return view('permiso.create', compact('permiso'));
     }
@@ -33,18 +33,18 @@ class PermisoController extends Controller
     {
         Permiso::create($request->validated());
         return Redirect::route('permiso.index')
-            ->with('success', 'Permiso created successfully.');
+            ->with('success', 'Permiso creado satisfactoriamente.');
     }
 
     public function show($id): View
     {
-        $permiso = Permiso::find($id);
+        $permiso = Permiso::findOrFail($id);
         return view('permiso.show', compact('permiso'));
     }
 
     public function edit($id): View
     {
-        $permiso = Permiso::find($id);
+        $permiso = Permiso::findOrFail($id);
         return view('permiso.edit', compact('permiso'));
     }
 
@@ -52,13 +52,14 @@ class PermisoController extends Controller
     {
         $permiso->update($request->validated());
         return Redirect::route('permiso.index')
-            ->with('success', 'Permiso updated successfully');
+            ->with('success', 'Permiso actualizado satisfactoriamente');
     }
 
     public function destroy($id): RedirectResponse
     {
-        Permiso::find($id)->delete();
+        $permiso = Permiso::findOrFail($id);
+        $permiso->delete();
         return Redirect::route('permiso.index')
-            ->with('success', 'Permiso deleted successfully');
+            ->with('success', 'Permiso eliminado satisfactoriamente');
     }
 }

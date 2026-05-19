@@ -11,7 +11,12 @@ class SubdimensionRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return true;
+        $subdimensionId = $this->route('subdimension') ?? $this->route('id');
+        if ($subdimensionId) {
+            $subdimension = \App\Models\Subdimension::find($subdimensionId);
+            return $subdimension && $this->user()->can($this->isMethod('PUT') || $this->isMethod('PATCH') ? 'update' : ($this->isMethod('DELETE') ? 'delete' : 'view'), $subdimension);
+        }
+        return $this->user()->can('create', \App\Models\Subdimension::class);
     }
 
     /**

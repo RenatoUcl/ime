@@ -6,6 +6,9 @@ use App\Models\Dimension;
 use App\Models\LineasProgramaticas;
 use App\Models\Encuesta;
 use App\Models\EncuestaInstancia;
+use App\Models\Respuesta;
+use App\Models\Pregunta;
+use App\Models\Subdimension;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -62,10 +65,9 @@ class IndiceMultiController extends Controller
         /**
          * 1️⃣ Cantidad de usuarios que respondieron esta encuesta en este período
          */
-        $usuarios = DB::table('respuestas')
-            ->where('id_encuesta', $encuestaId)
+        $usuarios = Respuesta::where('id_encuesta', $encuestaId)
             ->where('id_encuesta_instancia', $instanciaId)
-            ->distinct('id_usuario')
+            ->distinct()
             ->count('id_usuario');
 
         if ($usuarios === 0) {
@@ -76,17 +78,16 @@ class IndiceMultiController extends Controller
          * 2️⃣ Subdimensiones:
          *    SUM(valor) / usuarios
          */
-        $subdimensiones = DB::table('respuestas as r')
-            ->join('preguntas as p', 'p.id', '=', 'r.id_pregunta')
+        $subdimensiones = Respuesta::join('preguntas as p', 'p.id', '=', 'respuestas.id_pregunta')
             ->join('subdimensiones as sd', 'sd.id', '=', 'p.id_subdimension')
             ->join('dimensiones as d', 'd.id', '=', 'sd.id_dimension')
-            ->where('r.id_encuesta', $encuestaId)
-            ->where('r.id_encuesta_instancia', $instanciaId)
+            ->where('respuestas.id_encuesta', $encuestaId)
+            ->where('respuestas.id_encuesta_instancia', $instanciaId)
             ->groupBy('sd.id', 'sd.id_dimension')
             ->select(
                 'sd.id as id_subdimension',
                 'sd.id_dimension',
-                DB::raw('SUM(r.valor) / '.$usuarios.' as valor_subdimension')
+                DB::raw('SUM(respuestas.valor) / '.$usuarios.' as valor_subdimension')
             )
             ->get();
 
@@ -111,16 +112,20 @@ class IndiceMultiController extends Controller
         /**
          * 4️⃣ Normalizar dimensión: (sub1 + sub2 + sub3) / 3
          */
+        $dimensionesIds = array_keys($dimensiones);
+        $dimensionesMap = Dimension::whereIn('id', $dimensionesIds)
+            ->get()
+            ->keyBy('id');
+
         $resultadoFinal = [];
 
         foreach ($dimensiones as $idDimension => $data) {
 
-            // Seguridad: si por algún motivo no hay 3 subdimensiones
             if ($data['count'] === 0) {
                 continue;
             }
 
-            $dimension = Dimension::find($idDimension);
+            $dimension = $dimensionesMap->get($idDimension);
 
             if (!$dimension) {
                 continue;
@@ -200,10 +205,9 @@ public function verDimension($encuestaId, $dimensionId, $instanciaId)
      * 1. Cantidad de usuarios que respondieron
      *    (para esta encuesta y período)
      */
-    $totalUsuarios = DB::table('respuestas')
-        ->where('id_encuesta', $encuestaId)
+    $totalUsuarios = Respuesta::where('id_encuesta', $encuestaId)
         ->where('id_encuesta_instancia', $instanciaId)
-        ->distinct('id_usuario')
+        ->distinct()
         ->count('id_usuario');
 
     if ($totalUsuarios === 0) {
@@ -216,24 +220,21 @@ public function verDimension($encuestaId, $dimensionId, $instanciaId)
     /*
      * 2. Nombre de la dimensión
      */
-    $nombreDimension = DB::table('dimensiones')
-        ->where('id', $dimensionId)
-        ->value('nombre');
+    $nombreDimension = Dimension::where('id', $dimensionId)->value('nombre');
 
     /*
      * 3. Subdimensiones con cálculo CORRECTO:
      *    (SUMA respuestas) / (usuarios)
      */
-    $subdimensiones = DB::table('respuestas as r')
-        ->join('preguntas as p', 'p.id', '=', 'r.id_pregunta')
+    $subdimensiones = Respuesta::join('preguntas as p', 'p.id', '=', 'respuestas.id_pregunta')
         ->join('subdimensiones as sd', 'sd.id', '=', 'p.id_subdimension')
-        ->where('r.id_encuesta', $encuestaId)
-        ->where('r.id_encuesta_instancia', $instanciaId)
+        ->where('respuestas.id_encuesta', $encuestaId)
+        ->where('respuestas.id_encuesta_instancia', $instanciaId)
         ->where('sd.id_dimension', $dimensionId)
         ->groupBy('sd.id', 'sd.nombre')
         ->select(
             'sd.nombre',
-            DB::raw('ROUND(SUM(r.valor) / ' . $totalUsuarios . ', 2) as valor')
+            DB::raw('ROUND(SUM(respuestas.valor) / ' . $totalUsuarios . ', 2) as valor')
         )
         ->orderBy('sd.nombre')
         ->get();
@@ -246,22 +247,57 @@ public function verDimension($encuestaId, $dimensionId, $instanciaId)
 
     /**
      * HISTÓRICO POR DIMENSIÓN
-     * (opcional, queda consistente con el modelo)
+     * Usa el mismo modelo de cálculo: SUM(valor) / usuarios por período
      */
-    public function historicoDimension($encuesta, $dimension)
+    public function historicoDimension($encuesta, $dimension, $instancia = null)
     {
-        return DB::table('respuestas as r')
-            ->join('preguntas as p', 'p.id', '=', 'r.id_pregunta')
+        // Si no se pasa instancia, calculamos por cada período
+        $query = Respuesta::join('preguntas as p', 'p.id', '=', 'respuestas.id_pregunta')
             ->join('subdimensiones as sd', 'sd.id', '=', 'p.id_subdimension')
-            ->join('encuestas_instancias as ei', 'ei.id', '=', 'r.id_encuesta_instancia')
-            ->where('r.id_encuesta', $encuesta)
-            ->where('sd.id_dimension', $dimension)
-            ->groupBy('ei.id', 'ei.nombre_periodo')
-            ->select(
-                'ei.nombre_periodo as periodo',
-                DB::raw('ROUND(AVG(r.valor),2) as promedio')
-            )
-            ->orderBy('ei.fecha_desde')
+            ->join('encuestas_instancias as ei', 'ei.id', '=', 'respuestas.id_encuesta_instancia')
+            ->where('respuestas.id_encuesta', $encuesta)
+            ->where('sd.id_dimension', $dimension);
+
+        if ($instancia) {
+            $query->where('r.id_encuesta_instancia', $instancia);
+        }
+
+        // Primero obtenemos los períodos
+        $periodos = EncuestaInstancia::where('id_encuesta', $encuesta)
+            ->select('id', 'nombre_periodo', 'fecha_desde')
+            ->orderBy('fecha_desde')
             ->get();
+
+        $resultado = [];
+
+        foreach ($periodos as $periodo) {
+            // Contar usuarios únicos para este período
+            $totalUsuarios = Respuesta::join('preguntas as p', 'p.id', '=', 'respuestas.id_pregunta')
+                ->join('subdimensiones as sd', 'sd.id', '=', 'p.id_subdimension')
+                ->where('respuestas.id_encuesta', $encuesta)
+                ->where('respuestas.id_encuesta_instancia', $periodo->id)
+                ->where('sd.id_dimension', $dimension)
+                ->distinct()
+                ->count('respuestas.id_usuario');
+
+            if ($totalUsuarios === 0) {
+                continue;
+            }
+
+            // Calcular SUM(valor) / usuarios
+            $suma = Respuesta::join('preguntas as p', 'p.id', '=', 'respuestas.id_pregunta')
+                ->join('subdimensiones as sd', 'sd.id', '=', 'p.id_subdimension')
+                ->where('respuestas.id_encuesta', $encuesta)
+                ->where('respuestas.id_encuesta_instancia', $periodo->id)
+                ->where('sd.id_dimension', $dimension)
+                ->sum('respuestas.valor');
+
+            $resultado[] = [
+                'periodo' => $periodo->nombre_periodo,
+                'promedio' => round($suma / $totalUsuarios, 2),
+            ];
+        }
+
+        return collect($resultado);
     }
 }

@@ -40,7 +40,7 @@ class ArchivoController extends Controller
         Archivo::create($request->validated());
 
         return Redirect::route('archivos.index')
-            ->with('success', 'Archivo created successfully.');
+            ->with('success', 'Archivo creado satisfactoriamente.');
     }
 
     /**
@@ -48,7 +48,7 @@ class ArchivoController extends Controller
      */
     public function show($id): View
     {
-        $archivo = Archivo::find($id);
+        $archivo = Archivo::findOrFail($id);
 
         return view('archivo.show', compact('archivo'));
     }
@@ -58,7 +58,7 @@ class ArchivoController extends Controller
      */
     public function edit($id): View
     {
-        $archivo = Archivo::find($id);
+        $archivo = Archivo::findOrFail($id);
 
         return view('archivo.edit', compact('archivo'));
     }
@@ -71,14 +71,15 @@ class ArchivoController extends Controller
         $archivo->update($request->validated());
 
         return Redirect::route('archivos.index')
-            ->with('success', 'Archivo updated successfully');
+            ->with('success', 'Archivo actualizado satisfactoriamente');
     }
 
     public function destroy($id): RedirectResponse
     {
-        Archivo::find($id)->delete();
+        $archivo = Archivo::findOrFail($id);
+        $archivo->delete();
 
         return Redirect::route('archivos.index')
-            ->with('success', 'Archivo deleted successfully');
+            ->with('success', 'Archivo eliminado satisfactoriamente');
     }
 }

@@ -21,10 +21,7 @@ class UserController extends Controller
      */
     public function index(Request $request): View
     {
-        $userAuth = auth()->user()->load('roles');
-        if (!$userAuth->hasRole('admin')) {
-            abort(403, 'No tienes permiso para acceder a esta sección.');
-        }
+        $this->authorize('viewAny', User::class);
 
         $search = $request->get('search');
 
@@ -36,6 +33,7 @@ class UserController extends Controller
                     ->orWhere('email', 'like', "%{$search}%");
                 });
             })
+            ->with('roles')
             ->orderBy('id', 'asc')
             ->paginate(20);
 
@@ -60,7 +58,7 @@ class UserController extends Controller
     {
         User::create($request->validated());
         return Redirect::route('usuarios.index')
-            ->with('success', 'user created successfully.');
+            ->with('success', 'Usuario creado satisfactoriamente.');
     }
 
     /**
@@ -68,7 +66,7 @@ class UserController extends Controller
      */
     public function show($id): View
     {
-        $user = User::find($id);
+        $user = User::findOrFail($id);
 
         return view('usuarios.show', compact('user'));
     }
@@ -78,7 +76,7 @@ class UserController extends Controller
      */
     public function edit($id): View
     {
-        $user = User::find($id);
+        $user = User::findOrFail($id);
 
         return view('usuarios.edit', compact('user'));
     }
@@ -86,15 +84,6 @@ class UserController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    /*
-    public function update(UserRequest $request, $user): RedirectResponse
-    {
-        $user->update($request->validated());
-
-        return Redirect::route('usuarios.index')
-            ->with('success', 'Rol actualizado satisfactoriamente');
-    }
-    */
 
     public function update(UserUpdateRequest $request, $id): RedirectResponse
     {
@@ -115,7 +104,7 @@ class UserController extends Controller
 
     public function disabled($id): RedirectResponse
     {
-        $user = User::find($id);
+        $user = User::findOrFail($id);
         $user->estado = 0;
         $user->save();
 
@@ -125,10 +114,11 @@ class UserController extends Controller
 
     public function destroy($id): RedirectResponse
     {
-        User::find($id)->delete();
+        $user = User::findOrFail($id);
+        $user->delete();
 
         return Redirect::route('usuarios.index')
-            ->with('success', 'user deleted successfully');
+            ->with('success', 'Usuario eliminado satisfactoriamente');
     }
 
     // Mostrar formulario para asignar roles

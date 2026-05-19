@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Encuesta;
 use App\Models\EncuestaInstancia;
+use App\Models\Respuesta;
 use Illuminate\Http\Request;
 
 class EncuestaInstanciaController extends Controller
@@ -13,6 +14,9 @@ class EncuestaInstanciaController extends Controller
         $encuesta = Encuesta::findOrFail($encuestaId);
 
         $periodos = EncuestaInstancia::where('id_encuesta', $encuestaId)
+            ->withCount(['respuestas' => function ($query) {
+                $query->select(\DB::raw('count(distinct id_usuario)'));
+            }])
             ->orderByDesc('fecha_desde')
             ->get();
 
@@ -34,11 +38,9 @@ class EncuestaInstanciaController extends Controller
             'estado'         => 'nullable|boolean',
         ]);
 
-        // Opción A: Bloquear solapamientos (solo considerar períodos activos)
         $haySolapamiento = EncuestaInstancia::where('id_encuesta', $encuestaId)
             ->where('estado', 1)
             ->where(function ($q) use ($request) {
-                // overlap: (start <= existing_end) AND (end >= existing_start)
                 $q->whereDate('fecha_desde', '<=', $request->fecha_hasta)
                   ->whereDate('fecha_hasta', '>=', $request->fecha_desde);
             })
@@ -82,8 +84,7 @@ class EncuestaInstanciaController extends Controller
             'estado'         => 'required|boolean',
         ]);
 
-        // Opción A: Bloquear solapamientos (solo considerar períodos activos, excluyendo este)
-        if ((int)$request->estado === 1) {
+        if ((int)$request->estado === 1 && (int)$periodo->estado === 0) {
             $haySolapamiento = EncuestaInstancia::where('id_encuesta', $periodo->id_encuesta)
                 ->where('estado', 1)
                 ->where('id', '!=', $periodo->id)
@@ -116,6 +117,12 @@ class EncuestaInstanciaController extends Controller
     {
         $periodo = EncuestaInstancia::findOrFail($id);
         $encuestaId = $periodo->id_encuesta;
+
+        $tieneRespuestas = Respuesta::where('id_encuesta_instancia', $periodo->id)->exists();
+
+        if ($tieneRespuestas) {
+            return back()->with('error', 'No se puede eliminar el período porque tiene respuestas asociadas. Desactive el período en su lugar.');
+        }
 
         $periodo->delete();
 

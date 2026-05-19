@@ -11,7 +11,12 @@ class RoleRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return true;
+        $roleId = $this->route('role') ?? $this->route('id');
+        if ($roleId) {
+            $role = \App\Models\Roles::find($roleId);
+            return $role && $this->user()->can($this->isMethod('PUT') || $this->isMethod('PATCH') ? 'update' : ($this->isMethod('DELETE') ? 'delete' : 'view'), $role);
+        }
+        return $this->user()->can('create', \App\Models\Roles::class);
     }
 
     /**

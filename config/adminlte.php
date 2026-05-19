@@ -521,6 +521,16 @@ return [
                 ],
             ],
         ],
+        'CsrfSetup' => [
+            'active' => true,
+            'files' => [
+                [
+                    'type' => 'js',
+                    'asset' => true,
+                    'location' => 'js/csrf-setup.js',
+                ],
+            ],
+        ],
     ],
 
     /*

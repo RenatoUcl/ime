@@ -11,7 +11,12 @@ class PermisoRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return true;
+        $permisoId = $this->route('permiso') ?? $this->route('id');
+        if ($permisoId) {
+            $permiso = \App\Models\Permiso::find($permisoId);
+            return $permiso && $this->user()->can($this->isMethod('PUT') || $this->isMethod('PATCH') ? 'update' : ($this->isMethod('DELETE') ? 'delete' : 'view'), $permiso);
+        }
+        return $this->user()->can('create', \App\Models\Permiso::class);
     }
 
     /**

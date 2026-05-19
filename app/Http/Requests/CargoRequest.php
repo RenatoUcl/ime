@@ -11,7 +11,12 @@ class CargoRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return true;
+        $cargoId = $this->route('cargo') ?? $this->route('id');
+        if ($cargoId) {
+            $cargo = \App\Models\Cargos::find($cargoId);
+            return $cargo && $this->user()->can($this->isMethod('PUT') || $this->isMethod('PATCH') ? 'update' : ($this->isMethod('DELETE') ? 'delete' : 'view'), $cargo);
+        }
+        return $this->user()->can('create', \App\Models\Cargos::class);
     }
 
     /**

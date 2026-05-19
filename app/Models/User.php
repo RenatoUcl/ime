@@ -4,13 +4,14 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use App\Traits\Auditable;
 
 class User extends Authenticatable
 {
-    /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable;
+    use HasFactory, Notifiable, SoftDeletes, Auditable;
 
     /**
      * The attributes that are mass assignable.
@@ -32,7 +33,7 @@ class User extends Authenticatable
      * @var list<string>
      */
     protected $hidden = [
-        //'password',
+        'password',
         'remember_token',
     ];
 
@@ -59,7 +60,7 @@ class User extends Authenticatable
      */
     public function hasRole($role)
     {
-        return $this->roles->contains('nombre', $role);
+        return $this->roles()->where('estado', 1)->get()->contains('nombre', $role);
     }
 
 
@@ -68,8 +69,8 @@ class User extends Authenticatable
      */
     public function hasPermiso($nombrePermiso)
     {
-        foreach ($this->roles as $rol) {
-            if ($rol->permisos->contains('nombre', $nombrePermiso)) {
+        foreach ($this->roles()->where('estado', 1)->get() as $rol) {
+            if ($rol->permisos()->where('estado', 1)->get()->contains('nombre', $nombrePermiso)) {
                 return true;
             }
         }

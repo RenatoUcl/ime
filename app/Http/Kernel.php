@@ -22,6 +22,7 @@ class Kernel extends HttpKernel
             \Illuminate\View\Middleware\ShareErrorsFromSession::class,
             \App\Http\Middleware\VerifyCsrfToken::class,
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
+            \App\Http\Middleware\VerificarEstadoUsuario::class,
         ],
         'api' => [
             \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
@@ -38,8 +39,8 @@ class Kernel extends HttpKernel
         'password.confirm' => \Illuminate\Auth\Middleware\RequirePassword::class,
         'signed' => \Illuminate\Routing\Middleware\ValidateSignature::class,
         'rol' => \App\Http\Middleware\CheckRol::class,
-        
         'permiso' => \App\Http\Middleware\CheckPermiso::class,
+        'verificar.estado' => \App\Http\Middleware\VerificarEstadoUsuario::class,
         'throttle' => \Illuminate\Routing\Middleware\ThrottleRequests::class,
 
         'verified' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,

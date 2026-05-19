@@ -11,7 +11,12 @@ class DimensionRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return true;
+        $dimensionId = $this->route('dimension') ?? $this->route('id');
+        if ($dimensionId) {
+            $dimension = \App\Models\Dimension::find($dimensionId);
+            return $dimension && $this->user()->can($this->isMethod('PUT') || $this->isMethod('PATCH') ? 'update' : ($this->isMethod('DELETE') ? 'delete' : 'view'), $dimension);
+        }
+        return $this->user()->can('create', \App\Models\Dimension::class);
     }
 
     /**

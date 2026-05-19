@@ -40,7 +40,7 @@ class ConfiguracionController extends Controller
         Configuracion::create($request->validated());
 
         return Redirect::route('configuracions.index')
-            ->with('success', 'Configuracion created successfully.');
+            ->with('success', 'Configuracion creada satisfactoriamente.');
     }
 
     /**
@@ -48,7 +48,7 @@ class ConfiguracionController extends Controller
      */
     public function show($id): View
     {
-        $configuracion = Configuracion::find($id);
+        $configuracion = Configuracion::findOrFail($id);
 
         return view('configuracion.show', compact('configuracion'));
     }
@@ -58,7 +58,7 @@ class ConfiguracionController extends Controller
      */
     public function edit($id): View
     {
-        $configuracion = Configuracion::find($id);
+        $configuracion = Configuracion::findOrFail($id);
 
         return view('configuracion.edit', compact('configuracion'));
     }
@@ -71,14 +71,15 @@ class ConfiguracionController extends Controller
         $configuracion->update($request->validated());
 
         return Redirect::route('configuracions.index')
-            ->with('success', 'Configuracion updated successfully');
+            ->with('success', 'Configuracion actualizada satisfactoriamente');
     }
 
     public function destroy($id): RedirectResponse
     {
-        Configuracion::find($id)->delete();
+        $configuracion = Configuracion::findOrFail($id);
+        $configuracion->delete();
 
         return Redirect::route('configuracions.index')
-            ->with('success', 'Configuracion deleted successfully');
+            ->with('success', 'Configuracion eliminada satisfactoriamente');
     }
 }

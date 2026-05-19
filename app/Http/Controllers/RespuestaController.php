@@ -16,7 +16,7 @@ class RespuestaController extends Controller
      */
     public function index(Request $request): View
     {
-        $respuestas = Respuesta::paginate();
+        $respuestas = Respuesta::with(['encuesta', 'pregunta', 'alternativa', 'user'])->paginate();
 
         return view('respuesta.index', compact('respuestas'))
             ->with('i', ($request->input('page', 1) - 1) * $respuestas->perPage());
@@ -39,8 +39,8 @@ class RespuestaController extends Controller
     {
         Respuesta::create($request->validated());
 
-        return Redirect::route('respuestas.index')
-            ->with('success', 'Respuesta created successfully.');
+        return Redirect::route('respuesta.index')
+            ->with('success', 'Respuesta creada satisfactoriamente.');
     }
 
     /**
@@ -48,7 +48,7 @@ class RespuestaController extends Controller
      */
     public function show($id): View
     {
-        $respuesta = Respuesta::find($id);
+        $respuesta = Respuesta::findOrFail($id);
 
         return view('respuesta.show', compact('respuesta'));
     }
@@ -58,7 +58,7 @@ class RespuestaController extends Controller
      */
     public function edit($id): View
     {
-        $respuesta = Respuesta::find($id);
+        $respuesta = Respuesta::findOrFail($id);
 
         return view('respuesta.edit', compact('respuesta'));
     }
@@ -70,15 +70,16 @@ class RespuestaController extends Controller
     {
         $respuesta->update($request->validated());
 
-        return Redirect::route('respuestas.index')
-            ->with('success', 'Respuesta updated successfully');
+        return Redirect::route('respuesta.index')
+            ->with('success', 'Respuesta actualizada satisfactoriamente');
     }
 
     public function destroy($id): RedirectResponse
     {
-        Respuesta::find($id)->delete();
+        $respuesta = Respuesta::findOrFail($id);
+        $respuesta->delete();
 
-        return Redirect::route('respuestas.index')
-            ->with('success', 'Respuesta deleted successfully');
+        return Redirect::route('respuesta.index')
+            ->with('success', 'Respuesta eliminada satisfactoriamente');
     }
 }

@@ -37,13 +37,12 @@ class PreguntaController extends Controller
         Pregunta::create($request->validated());
 
         return Redirect::route('pregunta.index')
-            ->with('success', 'Pregunta created successfully.');
+            ->with('success', 'Pregunta creada satisfactoriamente.');
     }
 
     public function show($id): View
     {
-        $pregunta = Pregunta::find($id);
-
+        $pregunta = Pregunta::findOrFail($id);
         return view('pregunta.show', compact('pregunta'));
     }
 
@@ -64,14 +63,12 @@ class PreguntaController extends Controller
     {
         $pregunta = Pregunta::findOrFail($id);
 
-        $encuesta = Encuesta::select('id','nombre')
+        $encuesta = Encuesta::select('id', 'nombre')
             ->where('id', $pregunta->id_encuesta)
             ->first();
 
-        $subdimensiones = Subdimension::all();
+        $subdimensiones = Subdimension::with('dimension')->get();
 
-        // Solo preguntas de la misma encuesta
-        // Excluye la pregunta actual
         $preguntas = Pregunta::where('id_encuesta', $pregunta->id_encuesta)
             ->where('id', '!=', $pregunta->id)
             ->orderBy('posicion')
@@ -85,9 +82,9 @@ class PreguntaController extends Controller
         ));
     }
     
-    public function update(Request $request, $pregunta): RedirectResponse
+    public function update(Request $request, $id): RedirectResponse
     {
-        $pregunta = Pregunta::find($request->id);
+        $pregunta = Pregunta::findOrFail($id);
         $pregunta->id_encuesta = $request->id_encuesta;
         $pregunta->id_subdimension = $request->id_subdimension;
         $pregunta->texto = $request->texto;
@@ -100,32 +97,33 @@ class PreguntaController extends Controller
         }
         $pregunta->save();
 
-        return Redirect::route('encuesta.edit',$request->id_encuesta)
-            ->with('success', 'Pregunta updated successfully');
+        return Redirect::route('encuesta.edit', $request->id_encuesta)
+            ->with('success', 'Pregunta actualizada satisfactoriamente');
     }
 
     public function disabled($id): RedirectResponse
     {
-        $pregunta = Pregunta::find($id);
-        $respuesta = Respuesta::select('id','id_pregunta')->where('id_pregunta',$id)->get();
-        
-        if  (count($respuesta)>0){
-            return Redirect::route('encuesta.edit',$pregunta->id_encuesta)
-            ->with('warning', 'La pregunta no puede ser eliminada, por que contienen respuestas asociadas.');
-        } else {
-            Alternativa::where('id_pregunta',$id)->delete();
-            Pregunta::where('id',$id)->delete();
+        $pregunta = Pregunta::findOrFail($id);
+        $respuesta = Respuesta::where('id_pregunta', $id)->exists();
 
-            return Redirect::route('encuesta.edit',$pregunta->id_encuesta)
-            ->with('success', 'La pregunta fue Eliminada.');
+        if ($respuesta) {
+            return Redirect::route('encuesta.edit', $pregunta->id_encuesta)
+                ->with('warning', 'La pregunta no puede ser eliminada, porque contiene respuestas asociadas.');
         }
+
+        Alternativa::where('id_pregunta', $id)->delete();
+        $pregunta->delete();
+
+        return Redirect::route('encuesta.edit', $pregunta->id_encuesta)
+            ->with('success', 'La pregunta fue Eliminada.');
     }
 
     public function destroy($id): RedirectResponse
     {
-        Pregunta::find($id)->delete();
+        $pregunta = Pregunta::findOrFail($id);
+        $pregunta->delete();
 
         return Redirect::route('pregunta.index')
-            ->with('success', 'Pregunta deleted successfully');
+            ->with('success', 'Pregunta eliminada satisfactoriamente');
     }
 }

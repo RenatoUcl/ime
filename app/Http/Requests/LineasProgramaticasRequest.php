@@ -11,7 +11,12 @@ class LineasProgramaticasRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return true;
+        $lineaId = $this->route('lineasProgramaticas') ?? $this->route('id');
+        if ($lineaId) {
+            $linea = \App\Models\LineasProgramaticas::find($lineaId);
+            return $linea && $this->user()->can($this->isMethod('PUT') || $this->isMethod('PATCH') ? 'update' : ($this->isMethod('DELETE') ? 'delete' : 'view'), $linea);
+        }
+        return $this->user()->can('create', \App\Models\LineasProgramaticas::class);
     }
 
     /**

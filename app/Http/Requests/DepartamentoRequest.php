@@ -11,7 +11,12 @@ class DepartamentoRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return true;
+        $departamentoId = $this->route('departamento') ?? $this->route('id');
+        if ($departamentoId) {
+            $departamento = \App\Models\Departamento::find($departamentoId);
+            return $departamento && $this->user()->can($this->isMethod('PUT') || $this->isMethod('PATCH') ? 'update' : ($this->isMethod('DELETE') ? 'delete' : 'view'), $departamento);
+        }
+        return $this->user()->can('create', \App\Models\Departamento::class);
     }
 
     /**

@@ -9,6 +9,7 @@ use App\Models\Respuesta;
 use App\Models\CabeceraPregunta;
 use App\Models\CabeceraAlternativa;
 use App\Models\CabeceraRespuesta;
+use App\Models\EncuestaInstancia;
 use App\Models\EncuestasUsuario;
 use App\Models\Dimension;
 use App\Models\Subdimension;
@@ -24,13 +25,14 @@ class ResponderController extends Controller
 {
     public function index(Request $request): View
     {
-        $encuestas = Encuesta::all();
+        $encuestas = Encuesta::where('estado', 1)->with('linea')->get();
         return view('responder.index', compact('encuestas'));
     }
 
     public function show($id): View
     {
-        $encuesta = Encuesta::find($id);
+        $encuesta = Encuesta::findOrFail($id);
+        $this->authorize('respond', $encuesta);
         $dimensiones = Dimension::all();
         $subdimensiones = Subdimension::all();
 
@@ -49,25 +51,19 @@ class ResponderController extends Controller
             ->where('preguntas.id_encuesta', $id)
             ->get();
 
-        $cabeceras = CabeceraPregunta::all()->where('id_encuesta', $id);
+        $cabeceras = CabeceraPregunta::where('id_encuesta', $id)->get();
 
-        $idp = [];
-        foreach ($preguntas as $preg) {
-            $idp[] = $preg->id;
-        }
+        $idp = $preguntas->pluck('id')->toArray();
 
         $alternativas = !empty($idp)
-            ? Alternativa::all()->whereIn('id_pregunta', $idp)
-            : null;
+            ? Alternativa::whereIn('id_pregunta', $idp)->get()
+            : collect();
 
-        $ida = [];
-        foreach ($cabeceras as $valor) {
-            $ida[] = $valor->id;
-        }
+        $ida = $cabeceras->pluck('id')->toArray();
 
         $cabalternativas = !empty($ida)
-            ? CabeceraAlternativa::all()->whereIn('id_cabecera', $ida)
-            : null;
+            ? CabeceraAlternativa::whereIn('id_cabecera', $ida)->get()
+            : collect();
 
         return view('responder.show', compact(
             'encuesta',
@@ -86,49 +82,71 @@ class ResponderController extends Controller
      */
     public function save(Request $request)
     {
-        $id_encuesta = $request->id_encuesta;
+        $request->validate([
+            'id_encuesta' => 'required|integer|exists:encuestas,id',
+        ]);
 
-        $preguntas = Pregunta::all()->where('id_encuesta', $id_encuesta);
-        $cabeceras = CabeceraPregunta::all()->where('id_encuesta', $id_encuesta);
+        $encuesta = Encuesta::findOrFail($request->id_encuesta);
+        $this->authorize('respond', $encuesta);
 
-        foreach ($cabeceras as $cab) {
-            $calter = "cabresp" . $cab->id;
+        $id_encuesta = (int) $request->id_encuesta;
 
-            $cabeza = new CabeceraRespuesta();
-            $cabeza->id_pregunta = $cab->id;
+        $preguntas = Pregunta::where('id_encuesta', $id_encuesta)->get();
+        $cabeceras = CabeceraPregunta::where('id_encuesta', $id_encuesta)->get();
 
-            if ($cab->tipo == 2) {
-                $cabeza->respuesta = $request->$calter;
-                $cabeza->id_alternativa = '0';
-            } else {
-                $cabeza->respuesta = "";
-                $cabeza->id_alternativa = $request->$calter;
+        DB::beginTransaction();
+        try {
+            foreach ($cabeceras as $cab) {
+                $calter = "cabresp" . $cab->id;
+
+                $cabeza = new CabeceraRespuesta();
+                $cabeza->id_pregunta = $cab->id;
+
+                if ($cab->tipo == 2) {
+                    $cabeza->respuesta = $request->$calter ?? '';
+                    $cabeza->id_alternativa = 0;
+                } else {
+                    $cabeza->respuesta = '';
+                    $cabeza->id_alternativa = $request->$calter ?? 0;
+                }
+
+                $cabeza->save();
             }
 
-            $cabeza->save();
-        }
+            foreach ($preguntas as $preg) {
+                $alter = "respuesta" . $preg->id;
 
-        foreach ($preguntas as $preg) {
-            $alter = "respuesta" . $preg->id;
+                if (!$request->has($alter)) {
+                    continue;
+                }
 
-            if (!$request->has($alter)) {
-                continue;
+                $valorRaw = $request->$alter;
+                $dat = explode('|', $valorRaw);
+
+                if (count($dat) < 2) {
+                    continue;
+                }
+
+                $respuesta = new Respuesta();
+                $respuesta->id_pregunta = $preg->id;
+                $respuesta->id_alternativa = (int) ($dat[0] ?? 0);
+                $respuesta->valor = (int) ($dat[1] ?? 0);
+                $respuesta->nivel = 1;
+                $respuesta->id_encuesta = $id_encuesta;
+                $respuesta->id_usuario = Auth::id();
+                $respuesta->save();
             }
 
-            $dat = explode('|', $request->$alter);
+            DB::commit();
 
-            $respuesta = new Respuesta();
-            $respuesta->id_pregunta = $preg->id;
-            $respuesta->id_alternativa = $dat[0] ?? 0;
-            $respuesta->valor = $dat[1] ?? 0;
-            $respuesta->nivel = '1';
-            $respuesta->id_encuesta = $id_encuesta;
-            $respuesta->id_usuario = Auth::user()->id;
-            $respuesta->save();
+            return Redirect::route('responder.index')
+                ->with('success', 'Respuesta creada correctamente.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Error guardando respuestas (save antiguo): ' . $e->getMessage());
+            return Redirect::route('responder.index')
+                ->with('error', 'Error al guardar las respuestas.');
         }
-
-        return Redirect::route('responder.index')
-            ->with('success', 'Respuesta creada correctamente.');
     }
 
     /**
@@ -140,12 +158,12 @@ class ResponderController extends Controller
         $usuarioId = $user->id;
 
         $encuesta = Encuesta::findOrFail($idEncuesta);
+        $this->authorize('respond', $encuesta);
 
         // 1) Obtener período activo para esta encuesta
         $hoy = now()->toDateString();
 
-        $instancia = DB::table('encuestas_instancias')
-            ->where('id_encuesta', $idEncuesta)
+        $instancia = EncuestaInstancia::where('id_encuesta', $idEncuesta)
             ->where('estado', 1)
             ->whereDate('fecha_desde', '<=', $hoy)
             ->whereDate('fecha_hasta', '>=', $hoy)
@@ -188,238 +206,66 @@ class ResponderController extends Controller
             ]);
         }
 
-        // 5) Construir subdimensiones permitidas (tu lógica por rol se mantiene)
+        // 5) Construir subdimensiones permitidas (lógica por rol desde config)
         $loger = $user->load('roles');
         $permiso = $loger->roles->pluck('nombre');
         $rol = $permiso[0] ?? null;
 
-        switch ($rol) {
-            case 'Hospital_1':
-                $subdimensiones = Pregunta::join('subdimensiones as sd', 'sd.id', '=', 'preguntas.id_subdimension')
-                    ->leftJoin('dimensiones as d', 'd.id', '=', 'sd.id_dimension')
-                    ->where('preguntas.id_encuesta', $idEncuesta)
-                    ->where(function ($query) {
-                        $query->where('d.id', 3)->orWhere('d.id', 8);
-                    })
-                    ->select([
-                        'sd.id',
-                        'd.id as did',
-                        'd.nombre as dnombre',
-                        'd.descripcion as ddescrip',
-                        'preguntas.id_subdimension',
-                        'sd.nombre',
-                        'sd.descripcion'
-                    ])
-                    ->distinct()
-                    ->get();
-                break;
+        $configDimensiones = config('rol_dimensiones', []);
+        $dimensionesPermitidas = null;
 
-            case 'Hospital_2':
-                $subdimensiones = Pregunta::join('subdimensiones as sd', 'sd.id', '=', 'preguntas.id_subdimension')
-                    ->leftJoin('dimensiones as d', 'd.id', '=', 'sd.id_dimension')
-                    ->where('preguntas.id_encuesta', $idEncuesta)
-                    ->where(function ($query) {
-                        $query->where('d.id', 1)->orWhere('d.id', 5);
-                    })
-                    ->select([
-                        'sd.id',
-                        'd.id as did',
-                        'd.nombre as dnombre',
-                        'd.descripcion as ddescrip',
-                        'preguntas.id_subdimension',
-                        'sd.nombre',
-                        'sd.descripcion'
-                    ])
-                    ->distinct()
-                    ->get();
-                break;
-
-            case 'Hospital_3':
-                $subdimensiones = Pregunta::join('subdimensiones as sd', 'sd.id', '=', 'preguntas.id_subdimension')
-                    ->leftJoin('dimensiones as d', 'd.id', '=', 'sd.id_dimension')
-                    ->where('preguntas.id_encuesta', $idEncuesta)
-                    ->where(function ($query) {
-                        $query->where('d.id', 2)->orWhere('d.id', 5);
-                    })
-                    ->select([
-                        'sd.id',
-                        'd.id as did',
-                        'd.nombre as dnombre',
-                        'd.descripcion as ddescrip',
-                        'preguntas.id_subdimension',
-                        'sd.nombre',
-                        'sd.descripcion'
-                    ])
-                    ->distinct()
-                    ->get();
-                break;
-
-            case 'Hospital_4':
-                $subdimensiones = Pregunta::join('subdimensiones as sd', 'sd.id', '=', 'preguntas.id_subdimension')
-                    ->leftJoin('dimensiones as d', 'd.id', '=', 'sd.id_dimension')
-                    ->where('preguntas.id_encuesta', $idEncuesta)
-                    ->where(function ($query) {
-                        $query->where('d.id', 5)->orWhere('d.id', 7);
-                    })
-                    ->select([
-                        'sd.id',
-                        'd.id as did',
-                        'd.nombre as dnombre',
-                        'd.descripcion as ddescrip',
-                        'preguntas.id_subdimension',
-                        'sd.nombre',
-                        'sd.descripcion'
-                    ])
-                    ->distinct()
-                    ->get();
-                break;
-
-            case 'Hospital_5':
-                $subdimensiones = Pregunta::join('subdimensiones as sd', 'sd.id', '=', 'preguntas.id_subdimension')
-                    ->leftJoin('dimensiones as d', 'd.id', '=', 'sd.id_dimension')
-                    ->where('preguntas.id_encuesta', $idEncuesta)
-                    ->where('d.id', 6)
-                    ->select([
-                        'sd.id',
-                        'd.id as did',
-                        'd.nombre as dnombre',
-                        'd.descripcion as ddescrip',
-                        'preguntas.id_subdimension',
-                        'sd.nombre',
-                        'sd.descripcion'
-                    ])
-                    ->distinct()
-                    ->get();
-                break;
-
-            case 'Hospital_6':
-                $subdimensiones = Pregunta::join('subdimensiones as sd', 'sd.id', '=', 'preguntas.id_subdimension')
-                    ->leftJoin('dimensiones as d', 'd.id', '=', 'sd.id_dimension')
-                    ->where('preguntas.id_encuesta', $idEncuesta)
-                    ->where('d.id', 2)
-                    ->select([
-                        'sd.id',
-                        'd.id as did',
-                        'd.nombre as dnombre',
-                        'd.descripcion as ddescrip',
-                        'preguntas.id_subdimension',
-                        'sd.nombre',
-                        'sd.descripcion'
-                    ])
-                    ->distinct()
-                    ->get();
-                break;
-
-            case 'direccion_ejecutiva':
-                $subdimensiones = Pregunta::join('subdimensiones as sd', 'sd.id', '=', 'preguntas.id_subdimension')
-                    ->leftJoin('dimensiones as d', 'd.id', '=', 'sd.id_dimension')
-                    ->where('preguntas.id_encuesta', $idEncuesta)
-                    ->where(function ($query) {
-                        $query->where('d.id', 3)->orWhere('d.id', 4)->orWhere('d.id', 8);
-                    })
-                    ->select([
-                        'sd.id',
-                        'd.id as did',
-                        'd.nombre as dnombre',
-                        'd.descripcion as ddescrip',
-                        'preguntas.id_subdimension',
-                        'sd.nombre',
-                        'sd.descripcion'
-                    ])
-                    ->distinct()
-                    ->get();
-                break;
-
-            case 'coordinadores':
-            case 'director':
-                $subdimensiones = Pregunta::join('subdimensiones as sd', 'sd.id', '=', 'preguntas.id_subdimension')
-                    ->leftJoin('dimensiones as d', 'd.id', '=', 'sd.id_dimension')
-                    ->where('preguntas.id_encuesta', $idEncuesta)
-                    ->select([
-                        'sd.id',
-                        'd.id as did',
-                        'd.nombre as dnombre',
-                        'd.descripcion as ddescrip',
-                        'preguntas.id_subdimension',
-                        'sd.nombre',
-                        'sd.descripcion'
-                    ])
-                    ->distinct()
-                    ->get();
-                break;
-
-            case 'coordinador_tecnico':
-                $subdimensiones = Pregunta::join('subdimensiones as sd', 'sd.id', '=', 'preguntas.id_subdimension')
-                    ->leftJoin('dimensiones as d', 'd.id', '=', 'sd.id_dimension')
-                    ->where('preguntas.id_encuesta', $idEncuesta)
-                    ->where(function ($query) {
-                        $query->whereIn('d.id', [1,2,3,4,6,7]);
-                    })
-                    ->select([
-                        'sd.id',
-                        'd.id as did',
-                        'd.nombre as dnombre',
-                        'd.descripcion as ddescrip',
-                        'preguntas.id_subdimension',
-                        'sd.nombre',
-                        'sd.descripcion'
-                    ])
-                    ->distinct()
-                    ->get();
-                break;
-
-            case 'profesional':
-                $subdimensiones = Pregunta::join('subdimensiones as sd', 'sd.id', '=', 'preguntas.id_subdimension')
-                    ->leftJoin('dimensiones as d', 'd.id', '=', 'sd.id_dimension')
-                    ->where('preguntas.id_encuesta', $idEncuesta)
-                    ->where(function ($query) {
-                        $query->whereIn('d.id', [1,2,3,4]);
-                    })
-                    ->select([
-                        'sd.id',
-                        'd.id as did',
-                        'd.nombre as dnombre',
-                        'd.descripcion as ddescrip',
-                        'preguntas.id_subdimension',
-                        'sd.nombre',
-                        'sd.descripcion'
-                    ])
-                    ->distinct()
-                    ->get();
-                break;
-
-            default:
-                $subdimensiones = Pregunta::join('subdimensiones as sd', 'sd.id', '=', 'preguntas.id_subdimension')
-                    ->leftJoin('dimensiones as d', 'd.id', '=', 'sd.id_dimension')
-                    ->where('preguntas.id_encuesta', $idEncuesta)
-                    ->select([
-                        'sd.id',
-                        'd.id as did',
-                        'd.nombre as dnombre',
-                        'd.descripcion as ddescrip',
-                        'preguntas.id_subdimension',
-                        'sd.nombre',
-                        'sd.descripcion'
-                    ])
-                    ->distinct()
-                    ->get();
-                break;
+        $hospitalRoles = $configDimensiones['hospital_roles'] ?? [];
+        if (isset($hospitalRoles[$rol])) {
+            $dimensionesPermitidas = $hospitalRoles[$rol];
         }
 
+        $gestionRoles = $configDimensiones['gestion_roles'] ?? [];
+        if (isset($gestionRoles[$rol])) {
+            $dimensionesPermitidas = $gestionRoles[$rol];
+        }
+
+        $fullAccessRoles = $configDimensiones['full_access_roles'] ?? [];
+        if (in_array($rol, $fullAccessRoles)) {
+            $dimensionesPermitidas = [];
+        }
+
+        $query = Pregunta::join('subdimensiones as sd', 'sd.id', '=', 'preguntas.id_subdimension')
+            ->leftJoin('dimensiones as d', 'd.id', '=', 'sd.id_dimension')
+            ->where('preguntas.id_encuesta', $idEncuesta)
+            ->select([
+                'sd.id',
+                'd.id as did',
+                'd.nombre as dnombre',
+                'd.descripcion as ddescrip',
+                'preguntas.id_subdimension',
+                'sd.nombre',
+                'sd.descripcion'
+            ])
+            ->distinct();
+
+        if ($dimensionesPermitidas !== null && !empty($dimensionesPermitidas)) {
+            $query->whereIn('d.id', $dimensionesPermitidas);
+        }
+
+        $subdimensiones = $query->get();
+
         // 6) Construir grupos con preguntas, pero filtrando respuestaUsuario por instancia
+        $subdimensionesIds = $subdimensiones->pluck('id')->unique();
+
+        $preguntasPorSubdimension = Pregunta::where('id_encuesta', $idEncuesta)
+            ->whereIn('id_subdimension', $subdimensionesIds)
+            ->with(['alternativas', 'respuestaUsuario'])
+            ->orderBy('posicion')
+            ->get()
+            ->groupBy('id_subdimension');
+
         $gruposDePreguntas = collect();
 
         foreach ($subdimensiones as $subdimension) {
 
             $subid = $subdimension->id;
 
-            // IMPORTANTE: respuestaUsuario debe estar filtrada por instancia en el relation del modelo Pregunta
-            // Si tu relation actual no filtra por instancia, lo resolvemos en el modelo Pregunta (te lo indico abajo).
-            $preguntas = Pregunta::where('id_encuesta', $idEncuesta)
-                ->where('id_subdimension', $subid)
-                ->with(['alternativas', 'respuestaUsuario'])
-                ->orderBy('posicion')
-                ->get();
+            $preguntas = $preguntasPorSubdimension->get($subid, collect());
 
             if ($preguntas->isNotEmpty()) {
                 $gruposDePreguntas->push([
@@ -458,6 +304,9 @@ class ResponderController extends Controller
             'respuestas.*.valor_texto' => 'nullable|string|max:65535',
         ]);
 
+        $encuesta = Encuesta::findOrFail($validatedData['encuesta_id']);
+        $this->authorize('respond', $encuesta);
+
         $userId = Auth::id();
         if (!$userId) {
             return response()->json(['success' => false, 'message' => 'Usuario no autenticado.'], 401);
@@ -470,8 +319,7 @@ class ResponderController extends Controller
 
         if (!$instanciaId) {
             $hoy = now()->toDateString();
-            $instancia = DB::table('encuestas_instancias')
-                ->where('id_encuesta', $encuestaId)
+            $instancia = EncuestaInstancia::where('id_encuesta', $encuestaId)
                 ->where('estado', 1)
                 ->whereDate('fecha_desde', '<=', $hoy)
                 ->whereDate('fecha_hasta', '>=', $hoy)
@@ -508,9 +356,17 @@ class ResponderController extends Controller
         DB::beginTransaction();
         try {
             if (!empty($validatedData['respuestas'])) {
+                $preguntasValidas = Pregunta::where('id_encuesta', $encuestaId)
+                    ->pluck('id')
+                    ->toArray();
+
                 foreach ($validatedData['respuestas'] as $respuestaData) {
 
                     $preguntaId = (int)$respuestaData['pregunta_id'];
+
+                    if (!in_array($preguntaId, $preguntasValidas)) {
+                        continue;
+                    }
 
                     $datosAGuardar = [
                         'id_encuesta' => $encuestaId,

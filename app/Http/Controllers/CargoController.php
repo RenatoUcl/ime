@@ -13,6 +13,8 @@ class CargoController extends Controller
 {
     public function index(Request $request): View
     {
+        $this->authorize('viewAny', Cargos::class);
+
         $cargos = Cargos::paginate();
         return view('cargo.index', compact('cargos'))
             ->with('i', ($request->input('page', 1) - 1) * $cargos->perPage());
@@ -20,6 +22,8 @@ class CargoController extends Controller
 
     public function create(): View
     {
+        $this->authorize('create', Cargos::class);
+
         $cargo = new Cargos();
         return view('cargo.create', compact('cargo'));
     }
@@ -33,18 +37,19 @@ class CargoController extends Controller
 
     public function show($id): View
     {
-        $cargo = Cargos::find($id);
+        $cargo = Cargos::findOrFail($id);
         return view('cargo.show', compact('cargo'));
     }
 
     public function edit($id): View
     {
-        $cargo = Cargo::find($id);
+        $cargo = Cargos::findOrFail($id);
         return view('cargo.edit', compact('cargo'));
     }
 
-    public function update(CargoRequest $request, Cargo $cargo): RedirectResponse
+    public function update(CargoRequest $request, $id): RedirectResponse
     {
+        $cargo = Cargos::findOrFail($id);
         $cargo->update($request->validated());
         return Redirect::route('cargo.index')
             ->with('success', 'Cargo actualizado correctamente');
@@ -52,7 +57,8 @@ class CargoController extends Controller
 
     public function destroy($id): RedirectResponse
     {
-        Cargos::find($id)->delete();
+        $cargo = Cargos::findOrFail($id);
+        $cargo->delete();
         return Redirect::route('cargo.index')
             ->with('success', 'Cargo eliminado correctamente');
     }
