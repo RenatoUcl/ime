@@ -34,4 +34,14 @@ class Roles extends Model
         );
     }
 
+    public function permissions()
+    {
+        return $this->belongsToMany(
+            Permiso::class,
+            'permisos_roles',
+            'id_rol',
+            'id_permiso'
+        );
+    }
+
 }
