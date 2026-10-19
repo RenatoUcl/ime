@@ -29,13 +29,16 @@ return new class extends Migration
 
             // Quitar FK existente para poder modificar unique
             if ($driver !== 'sqlite') {
-                try {
-                    $table->dropForeign(['id_user']);
-                } catch (\Throwable $e) {}
-
-                try {
-                    $table->dropForeign(['id_rol']);
-                } catch (\Throwable $e) {}
+                foreach (['id_user', 'id_rol'] as $fkName) {
+                    $exists = \DB::select(
+                        "SELECT COUNT(*) as c FROM information_schema.KEY_COLUMN_USAGE
+                         WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'roles_usuarios' AND CONSTRAINT_NAME = ?",
+                        [$fkName]
+                    );
+                    if ($exists[0]->c > 0) {
+                        \DB::statement("ALTER TABLE roles_usuarios DROP FOREIGN KEY `{$fkName}`");
+                    }
+                }
             }
 
             // Quitar unique de id_user - buscar dinámicamente el nombre del índice
@@ -43,10 +46,8 @@ return new class extends Migration
             foreach ($indexes as $index) {
                 $indexName = is_array($index) ? $index['name'] : $index->name;
                 $columns = is_array($index) ? $index['columns'] : ($index->columns ?? []);
-                if (in_array('id_user', $columns) && count($columns) === 1) {
-                    try {
-                        $table->dropUnique($indexName);
-                    } catch (\Throwable $e) {}
+                if (in_array('id_user', $columns) && count($columns) === 1 && Schema::hasIndex('roles_usuarios', $indexName)) {
+                    $table->dropUnique($indexName);
                     break;
                 }
             }
@@ -76,20 +77,23 @@ return new class extends Migration
     {
         $driver = Schema::getConnection()->getDriverName();
 
-        Schema::table('roles_usuarios', function (Blueprint $table) use ($driver) {
-            if ($driver !== 'sqlite') {
-                try {
-                    $table->dropForeign(['id_user']);
-                } catch (\Throwable $e) {}
-
-                try {
-                    $table->dropForeign(['id_rol']);
-                } catch (\Throwable $e) {}
+        if ($driver !== 'sqlite') {
+            foreach (['id_user', 'id_rol'] as $fkName) {
+                $exists = \DB::select(
+                    "SELECT COUNT(*) as c FROM information_schema.KEY_COLUMN_USAGE
+                     WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'roles_usuarios' AND CONSTRAINT_NAME = ?",
+                    [$fkName]
+                );
+                if ($exists[0]->c > 0) {
+                    \DB::statement("ALTER TABLE roles_usuarios DROP FOREIGN KEY `{$fkName}`");
+                }
             }
+        }
 
-            try {
+        Schema::table('roles_usuarios', function (Blueprint $table) use ($driver) {
+            if (Schema::hasIndex('roles_usuarios', 'uq_roles_usuarios_user_rol')) {
                 $table->dropUnique('uq_roles_usuarios_user_rol');
-            } catch (\Throwable $e) {}
+            }
 
             // Restaurar unique en id_user
             $table->unique('id_user');

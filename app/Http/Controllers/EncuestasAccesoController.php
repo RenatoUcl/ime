@@ -12,21 +12,6 @@ use Illuminate\Support\Facades\DB;
 
 class EncuestasAccesoController extends Controller
 {
-    /*
-    public function index()
-    {
-        $accesos = EncuestaUsuarioDimension::with(['usuario', 'encuesta', 'dimension'])
-            ->orderBy('id_usuario')
-            ->orderBy('id_encuesta')
-            ->orderBy('orden')
-            ->get()
-            ->groupBy(function ($item) {
-                return $item->id_usuario . '-' . $item->id_encuesta;
-            });
-        return view('encuestas_accesos.index', compact('accesos'));
-    }
-    */
-
     public function index(Request $request)
     {
         $search = $request->get('search');
@@ -222,6 +207,16 @@ class EncuestasAccesoController extends Controller
                 ->back()
                 ->with('error', 'Ocurrió un error al actualizar: ' . $e->getMessage());
         }
+    }
+
+    public function activate()
+    {
+        DB::table('encuestas_usuarios')
+            ->update(['completado' => 0]);
+        
+        return redirect()
+            ->route('encuestas.accesos.index')
+            ->with('success', 'Todas las encuestas han sido reactivadas correctamente.');
     }
 
     public function matriz()

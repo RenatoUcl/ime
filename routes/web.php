@@ -24,6 +24,8 @@ use App\Http\Controllers\IndiceMultiController;
 use App\Http\Controllers\EncuestasAccesoController;
 use App\Http\Controllers\EncuestaFlujoController;
 use App\Http\Controllers\EncuestaInstanciaController;
+use App\Http\Controllers\MedioVerificacionController;
+use App\Http\Controllers\TerminoVerificacionController;
 
 use App\Models\Dimension;
 use App\Models\Encuesta;
@@ -55,13 +57,19 @@ Route::middleware("auth")->group(function (){
 
     //Usuarios
     Route::controller(UserController::class)->group(function(){
+        // Basicos
         Route::get('/usuarios','index')->name('usuarios.index');
         Route::get('/usuarios/create','create')->name('usuarios.create');
         Route::post('/usuarios/store', 'store')->name('usuarios.store');
+        // Importar Usuarios
+        Route::get('/usuarios/import', 'showImportForm')->name('usuarios.import.form');
+        Route::post('/usuarios/import', 'import')->name('usuarios.import');
+        // Mostrar Usuarios
         Route::get('/usuarios/show/{id}', 'show')->name('usuarios.show');
         Route::get('/usuarios/edit/{id}', 'edit')->name('usuarios.edit');
         Route::put('/usuarios/update/{id}', 'update')->name('usuarios.update');
         Route::delete('/usuarios/destroy/{id}', 'destroy')->name('usuarios.destroy');
+        // Roles de Usuarios
         Route::get('usuarios/{id}/roles', 'mostrarRoles')->name('usuarios.roles');
         Route::post('usuarios/{id}/roles', 'asignarRoles')->name('usuarios.roles.asignar');
     });
@@ -283,6 +291,7 @@ Route::middleware("auth")->group(function (){
         Route::get('/encuestas/accesos/create', 'create')->name('encuestas.accesos.create');
         Route::post('/encuestas/accesos/store', 'store')->name('encuestas.accesos.store');
         Route::get('/encuestas/accesos/{id}/edit', 'edit')->name('encuestas.accesos.edit');
+        Route::get('/encuestas/accesos/activate', 'activate')->name('encuestas.accesos.activate');
         Route::put('/encuestas/accesos/{id}/update', 'update')->name('encuestas.accesos.update');
         Route::delete('/encuestas/accesos/{id}', 'destroy')->name('encuestas.accesos.destroy');
     });
@@ -316,5 +325,29 @@ Route::middleware("auth")->group(function (){
     Route::get('periodos/{id}/editar',[EncuestaInstanciaController::class, 'edit'])->name('encuestas.periodos.edit');
     Route::put('periodos/{id}',[EncuestaInstanciaController::class, 'update'])->name('encuestas.periodos.update');
     Route::delete('periodos/{id}',[EncuestaInstanciaController::class, 'destroy'])->name('encuestas.periodos.destroy');
+
+    // Medios de Verificación
+    Route::resource('medios-verificacion', MedioVerificacionController::class)->names([
+        'index' => 'medios-verificacion.index',
+        'create' => 'medios-verificacion.create',
+        'store' => 'medios-verificacion.store',
+        'show' => 'medios-verificacion.show',
+        'edit' => 'medios-verificacion.edit',
+        'update' => 'medios-verificacion.update',
+        'destroy' => 'medios-verificacion.destroy',
+    ]);
+
+    Route::post('medios-verificacion/{id}/archivo', [MedioVerificacionController::class, 'subirArchivo'])->name('medios-verificacion.archivo');
+
+    // Términos de Verificación
+    Route::resource('terminos-verificacion',TerminoVerificacionController::class)->names([
+        'index' => 'terminos-verificacion.index',
+        'create' => 'terminos-verificacion.create',
+        'store' => 'terminos-verificacion.store',
+        'show' => 'terminos-verificacion.show',
+        'edit' => 'terminos-verificacion.edit',
+        'update' => 'terminos-verificacion.update',
+        'destroy' => 'terminos-verificacion.destroy',
+    ]);
 
 });                                                                                                                                         

@@ -28,7 +28,7 @@ class EncuestaController extends Controller
     {
         $this->authorize('viewAny', Encuesta::class);
 
-        $encuestas = Encuesta::with('linea')->paginate();
+        $encuestas = Encuesta::where('estado', 1)->with('linea')->paginate();
 
         return view('encuesta.index', compact('encuestas'))
             ->with('i', ($request->input('page', 1) - 1) * $encuestas->perPage());

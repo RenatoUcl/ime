@@ -14,6 +14,10 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\View\View;
 use Illuminate\Support\Facades\Auth;
 
+// Requeridos para la importación de usuarios desde Excel/CSV
+use App\Imports\UsersImport;
+use Maatwebsite\Excel\Facades\Excel;
+
 class UserController extends Controller
 {
     /**
@@ -25,7 +29,8 @@ class UserController extends Controller
 
         $search = $request->get('search');
 
-        $users = User::when($search, function ($query, $search) {
+        $users = User::where('estado',1)
+            ->when($search, function ($query, $search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('nombre', 'like', "%{$search}%")
                     ->orWhere('ap_paterno', 'like', "%{$search}%")
@@ -142,6 +147,43 @@ class UserController extends Controller
 
 
         return redirect()->route('usuarios.index')->with('success', 'Roles asignados correctamente.');
+    }
+    
+    /**
+     * Muestra la vista para subir el archivo CSV.
+     */
+    public function showImportForm(): View
+    {
+        return view('usuarios.import');
+    }
+
+    /**
+     * Procesa la carga e importación masiva desde el archivo CSV.
+     */
+    public function import(Request $request): RedirectResponse
+    {
+        // Aumentar el tiempo máximo de ejecución a 5 minutos (300 segundos)
+        set_time_limit(300);
+        ini_set('memory_limit', '512M');
+        
+        $request->validate([
+            'file' => 'required|mimes:csv,txt|max:10240', // Máximo 10 MB
+        ], [
+            'file.required' => 'Debes adjuntar un archivo CSV.',
+            'file.mimes'    => 'El archivo debe tener formato .csv.',
+            'file.max'      => 'El archivo no puede pesar más de 10 MB.',
+        ]);
+
+        try {
+            Excel::import(new UsersImport, $request->file('file'));
+
+            return Redirect::route('usuarios.index')
+                ->with('success', 'Usuarios importados y procesados satisfactoriamente.');
+        } catch (\Maatwebsite\Excel\Validators\ValidationException $e) {
+            $failures = $e->failures();
+
+            return back()->with('import_errors', $failures);
+        }
     }
 
 }

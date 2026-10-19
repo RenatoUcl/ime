@@ -21,3 +21,10 @@
 .img-circle {
   border-radius: 0% !important;
 }
+
+.backroco {
+    background-image: url('../../../../assets/img/backroco.jpg') !important;
+    background-size: cover !important;
+    background-position: center !important;
+    height: 100vh !important;
+}

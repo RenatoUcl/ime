@@ -5,8 +5,8 @@
 @endsection
 
 @section('content')
-<div class="container-fluid mt-5">
-    <div class="row mt-5">
+<div class="container-fluid">
+    <div class="row pt-3">
 
         {{-- COLUMNA IZQUIERDA --}}
         <div class="col-6">
@@ -57,7 +57,7 @@
         <div class="col-6">
             <div class="card">
                 <div class="card-header bg-primary text-white">
-                    DIMENSIONES
+                    DETALLE DE DIMENSIONES
                 </div>
                 <div class="card-body" id="contenedor-tabla"></div>
                 <div class="card-footer" id="resumen"></div>
@@ -256,7 +256,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     /* =========================
        RENDER RESULTADOS (A y opcional B)
-    =========================*/
+    =========================*
     function renderResultados(dataA, dataB, encuestaId, periodoAId) {
 
         if (!dataA || !dataA.length) {
@@ -387,6 +387,302 @@ document.addEventListener('DOMContentLoaded', function () {
                             color: '#333'
                         }
                     }
+                }
+            }
+        });
+    }
+
+    /* =========================
+   RENDER RESULTADOS (A y opcional B) - MEJORADO
+    =========================*/
+    function renderResultados(dataA, dataB, encuestaId, periodoAId) {
+
+        if (!dataA || !dataA.length) {
+            document.getElementById('contenedor-tabla').innerHTML =
+                '<div class="alert alert-warning">No hay resultados para este período</div>';
+            return;
+        }
+
+        const labels = dataA.map(d => d.nombre);
+        const valoresA = dataA.map(d => parseFloat(d.promedio));
+
+        let promedioA = 0;
+        dataA.forEach(d => promedioA += parseFloat(d.promedio));
+        promedioA = promedioA / dataA.length;
+
+        // ========================================
+        // TABLA MEJORADA CON BARRAS DE PROGRESO
+        // ========================================
+        let html = `<div class="table-responsive">
+            <table class="table table-hover">
+                <thead class="bg-primary text-white">
+                    <tr>
+                        <th><i class="fas fa-tag"></i> Dimensión</th>
+                        <th><i class="fas fa-chart-line"></i> Promedio</th>
+                        <th><i class="fas fa-bullseye"></i> Efectividad</th>
+                        <th><i class="fas fa-cogs"></i> Acción</th>
+                    </tr>
+                </thead>
+                <tbody>`;
+
+        dataA.forEach(d => {
+            const valor = parseFloat(d.promedio);
+            
+            let color, estado, icono, badgeColor, barColor;
+            if (valor < 5) {
+                color = 'table-danger';
+                estado = 'Alerta';
+                icono = '🔴';
+                badgeColor = 'danger';
+                barColor = 'bg-danger';
+            } else if (valor < 7.5) {
+                color = 'table-warning';
+                estado = 'Mínimo Funcional';
+                icono = '🟡';
+                badgeColor = 'warning';
+                barColor = 'bg-warning';
+            } else {
+                color = 'table-success';
+                estado = 'Máxima Efectividad';
+                icono = '🟢';
+                badgeColor = 'success';
+                barColor = 'bg-success';
+            }
+
+            const barWidth = Math.min((valor / 10) * 100, 100);
+
+            // Valor B si existe
+            let valorB = '';
+            let comparacion = '';
+            if (dataB && dataB.length) {
+                const mapB = new Map();
+                dataB.forEach(x => mapB.set(String(x.id_dimension), parseFloat(x.promedio)));
+                const key = String(d.id_dimension);
+                if (mapB.has(key)) {
+                    const valB = mapB.get(key);
+                    valorB = `<br><small class="text-muted">B: ${valB.toFixed(2)}</small>`;
+                    const diff = (valor - valB);
+                    const arrow = diff > 0 ? '↑' : diff < 0 ? '↓' : '→';
+                    const colorDiff = diff > 0 ? 'text-success' : diff < 0 ? 'text-danger' : 'text-muted';
+                    comparacion = `<br><small class="${colorDiff}">${arrow} ${Math.abs(diff).toFixed(2)}</small>`;
+                }
+            }
+
+            html += `
+                <tr class="${color}">
+                    <td><strong>${d.nombre}</strong></td>
+                    <td>
+                        <div class="d-flex align-items-center">
+                            <center>
+                                <span class="badge badge-${badgeColor} mr-2" style="font-size: 1rem; min-width: 45px;">${valor.toFixed(2)}</span>
+                            </center>
+                            </div>
+                        </div>
+                        ${valorB}
+                        ${comparacion}
+                    </td>
+                    <td>
+                        <span class="badge badge-${badgeColor}">${estado}</span>
+                    </td>
+                    <td>
+                        <button type="button" class="btn btn-sm btn-info btn-rounded"
+                            onclick="verDimension(${encuestaId}, ${periodoAId}, ${d.id_dimension})">
+                            <i class="fas fa-chart-pie"></i> Ver
+                        </button>
+                    </td>
+                </tr>`;
+        });
+
+        html += '</tbody></table></div>';
+        document.getElementById('contenedor-tabla').innerHTML = html;
+
+        // ========================================
+        // RESUMEN MEJORADO
+        // ========================================
+        let resumenHtml = `
+            <div class="row">
+                <div class="col-12">
+                    <div class="info-box bg-gradient-primary">
+                        <span class="info-box-icon"><i class="fas fa-calculator"></i></span>
+                        <div class="info-box-content">
+                            <span class="info-box-text">Promedio General Período A</span>
+                            <span class="info-box-number">${promedioA.toFixed(2)}</span>
+                        </div>
+                    </div>
+                </div>`;
+
+        if (dataB && dataB.length) {
+            const mapB = new Map();
+            dataB.forEach(x => mapB.set(String(x.id_dimension), parseFloat(x.promedio)));
+            let promedioB = 0;
+            let countB = 0;
+            dataA.forEach(d => {
+                const key = String(d.id_dimension);
+                if (mapB.has(key)) {
+                    promedioB += mapB.get(key);
+                    countB++;
+                }
+            });
+            promedioB = countB > 0 ? promedioB / countB : 0;
+            const diffGlobal = (promedioA - promedioB);
+            const colorGlobal = diffGlobal > 0 ? 'success' : diffGlobal < 0 ? 'danger' : 'secondary';
+            const iconGlobal = diffGlobal > 0 ? 'fa-arrow-up' : diffGlobal < 0 ? 'fa-arrow-down' : 'fa-minus';
+
+            resumenHtml += `
+                <div class="col-12 mt-2">
+                    <div class="info-box bg-gradient-info">
+                        <span class="info-box-icon"><i class="fas ${iconGlobal}"></i></span>
+                        <div class="info-box-content">
+                            <span class="info-box-text">Promedio General Período B</span>
+                            <span class="info-box-number">${promedioB.toFixed(2)}</span>
+                            <span class="text-${colorGlobal}" style="font-size: 0.9rem;">
+                                ${diffGlobal > 0 ? '+' : ''}${diffGlobal.toFixed(2)}
+                            </span>
+                        </div>
+                    </div>
+                </div>`;
+        }
+
+        resumenHtml += '</div>';
+        document.getElementById('resumen').innerHTML = resumenHtml;
+
+        // ========================================
+        // GRÁFICO RADAR MEJORADO
+        // ========================================
+        document.getElementById('contenedor-grafico').innerHTML =
+            '<div style="position: relative; height: 400px; width: 100%;">' +
+            '<canvas id="radarCanvas"></canvas></div>';
+
+        const ctx = document.getElementById('radarCanvas').getContext('2d');
+        if (radarChart) radarChart.destroy();
+
+        const datasets = [];
+
+        // Dataset Período A
+        datasets.push({
+            label: '📊 Período A',
+            data: valoresA,
+            backgroundColor: 'rgba(54, 162, 235, 0.15)',
+            borderColor: 'rgba(54, 162, 235, 1)',
+            borderWidth: 3,
+            pointBackgroundColor: 'rgba(54, 162, 235, 1)',
+            pointBorderColor: '#fff',
+            pointBorderWidth: 2,
+            pointRadius: 6,
+            pointHoverRadius: 9,
+            fill: true,
+            tension: 0.2
+        });
+
+        // Dataset Período B
+        if (dataB && dataB.length) {
+            const mapB = new Map();
+            dataB.forEach(x => mapB.set(String(x.id_dimension), parseFloat(x.promedio)));
+
+            const valoresB = dataA.map(d => {
+                const key = String(d.id_dimension);
+                return mapB.has(key) ? mapB.get(key) : null;
+            });
+
+            datasets.push({
+                label: '📈 Período B',
+                data: valoresB,
+                backgroundColor: 'rgba(255, 99, 132, 0.15)',
+                borderColor: 'rgba(255, 99, 132, 1)',
+                borderWidth: 3,
+                borderDash: [6, 4],
+                pointBackgroundColor: 'rgba(255, 99, 132, 1)',
+                pointBorderColor: '#fff',
+                pointBorderWidth: 2,
+                pointRadius: 6,
+                pointHoverRadius: 9,
+                fill: true,
+                tension: 0.2,
+                pointStyle: 'rectRot'
+            });
+        }
+
+        radarChart = new Chart(ctx, {
+            type: 'radar',
+            data: {
+                labels: labels,
+                datasets: datasets
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'top',
+                        labels: {
+                            font: { size: 13, weight: 'bold' },
+                            padding: 20,
+                            usePointStyle: true,
+                            pointStyle: 'circle'
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(0,0,0,0.8)',
+                        titleFont: { size: 14, weight: 'bold' },
+                        bodyFont: { size: 13 },
+                        padding: 12,
+                        cornerRadius: 8,
+                        displayColors: true,
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.dataset.label || '';
+                                let value = context.parsed.r;
+                                if (value !== null && value !== undefined) {
+                                    label += ': ' + value.toFixed(2);
+                                }
+                                return label;
+                            },
+                            afterBody: function(tooltipItems) {
+                                const value = tooltipItems[0].parsed.r;
+                                if (value === null || value === undefined) return '';
+                                if (value < 5) return '⚠️ Alerta';
+                                if (value < 7.5) return '📊 Mínimo Funcional';
+                                return '✅ Máxima Efectividad';
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    r: {
+                        min: 0,
+                        max: 10,
+                        ticks: {
+                            stepSize: 2,
+                            backdropColor: 'transparent',
+                            font: { size: 11, weight: 'bold' },
+                            color: '#666'
+                        },
+                        grid: {
+                            circular: true,
+                            color: function(context) {
+                                const value = context.tick.value;
+                                if (value === 0) return 'rgba(0,0,0,0.08)';
+                                if (value <= 5) return 'rgba(220, 53, 69, 0.15)';
+                                if (value <= 7.5) return 'rgba(255, 193, 7, 0.15)';
+                                return 'rgba(40, 167, 69, 0.15)';
+                            },
+                            lineWidth: 1.5
+                        },
+                        angleLines: {
+                            color: 'rgba(0,0,0,0.08)',
+                            lineWidth: 1.5
+                        },
+                        pointLabels: {
+                            font: { size: 12, weight: 'bold' },
+                            color: '#333',
+                            padding: 15
+                        }
+                    }
+                },
+                animation: {
+                    duration: 1000,
+                    easing: 'easeInOutQuart'
                 }
             }
         });

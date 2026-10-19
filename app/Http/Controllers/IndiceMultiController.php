@@ -21,7 +21,8 @@ class IndiceMultiController extends Controller
     {
         $lineas = LineasProgramaticas::all();
 
-        $encuestas = Encuesta::select('id', 'id_linea', 'nombre')
+        $encuestas = Encuesta::where('estado', 1)
+            ->select('id', 'id_linea', 'nombre')
             ->orderBy('nombre')
             ->get();
 

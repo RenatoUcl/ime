@@ -2,6 +2,7 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
@@ -11,17 +12,28 @@ return new class extends Migration
         Schema::table('encuestas_usuarios', function (Blueprint $table) {
             if (!Schema::hasColumn('encuestas_usuarios', 'id_encuesta_instancia')) {
                 $table->unsignedBigInteger('id_encuesta_instancia')
-                    ->after('id_encuesta');
+                    ->after('id_encuesta')
+                    ->nullable();
+            } else {
+                DB::statement('ALTER TABLE encuestas_usuarios MODIFY COLUMN id_encuesta_instancia BIGINT UNSIGNED NULL');
             }
 
             // Índice para búsquedas rápidas de reanudación / completado por período
-            $table->index(['id_encuesta', 'id_encuesta_instancia', 'id_usuario'], 'idx_enc_iu_user');
+            if (!Schema::hasIndex('encuestas_usuarios', 'idx_enc_iu_user')) {
+                $table->index(['id_encuesta', 'id_encuesta_instancia', 'id_usuario'], 'idx_enc_iu_user');
+            }
         });
+
+        // Limpiar valores inválidos antes de agregar FK
+        DB::table('encuestas_usuarios')
+            ->where('id_encuesta_instancia', 0)
+            ->orWhereNotIn('id_encuesta_instancia', function ($query) {
+                $query->select('id')->from('encuesta_instancias');
+            })
+            ->update(['id_encuesta_instancia' => null]);
 
         // FK (en una segunda llamada para evitar conflictos en algunos motores)
         Schema::table('encuestas_usuarios', function (Blueprint $table) {
-            // Si no existe la FK, la creamos
-            // Nota: Laravel no trae "hasForeign" nativo, así que asumimos que no existe.
             $table->foreign('id_encuesta_instancia')
                 ->references('id')->on('encuesta_instancias')
                 ->onDelete('cascade');
@@ -31,7 +43,6 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('encuestas_usuarios', function (Blueprint $table) {
-            // El orden importa: primero FK, luego índice, luego columna
             try { $table->dropForeign(['id_encuesta_instancia']); } catch (\Throwable $e) {}
             try { $table->dropIndex('idx_enc_iu_user'); } catch (\Throwable $e) {}
 

@@ -1,3 +1,114 @@
+@section('js')
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    const labels = @json($subdimensiones->pluck('subdimension'));
+    const valores = @json($subdimensiones->pluck('promedio'));
+
+    const ctx = document.getElementById('radarSubdimensiones').getContext('2d');
+
+    new Chart(ctx, {
+        type: 'radar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: '📊 Promedio por Subdimensión',
+                data: valores,
+                backgroundColor: 'rgba(54, 162, 235, 0.15)',
+                borderColor: 'rgba(54, 162, 235, 1)',
+                borderWidth: 3,
+                pointBackgroundColor: 'rgba(54, 162, 235, 1)',
+                pointBorderColor: '#fff',
+                pointBorderWidth: 2,
+                pointRadius: 6,
+                pointHoverRadius: 9,
+                pointStyle: 'circle',
+                fill: true,
+                tension: 0.2
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'top',
+                    labels: {
+                        font: { size: 13, weight: 'bold' },
+                        padding: 20,
+                        usePointStyle: true,
+                        pointStyle: 'circle'
+                    }
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(0,0,0,0.8)',
+                    titleFont: { size: 14, weight: 'bold' },
+                    bodyFont: { size: 13 },
+                    padding: 12,
+                    cornerRadius: 8,
+                    displayColors: true,
+                    callbacks: {
+                        label: function(context) {
+                            let label = context.dataset.label || '';
+                            let value = context.parsed.r;
+                            if (value !== null && value !== undefined) {
+                                label += ': ' + value.toFixed(2);
+                            }
+                            return label;
+                        },
+                        afterBody: function(tooltipItems) {
+                            const value = tooltipItems[0].parsed.r;
+                            if (value === null || value === undefined) return '';
+                            if (value < 5) return '🔴 Crítico';
+                            if (value < 7.5) return '🟡 En desarrollo';
+                            return '🟢 Óptimo';
+                        }
+                    }
+                }
+            },
+            scales: {
+                r: {
+                    min: 0,
+                    max: 10,
+                    ticks: {
+                        stepSize: 2,
+                        backdropColor: 'transparent',
+                        font: { size: 11, weight: 'bold' },
+                        color: '#666'
+                    },
+                    grid: {
+                        circular: true,
+                        color: function(context) {
+                            const value = context.tick.value;
+                            if (value === 0) return 'rgba(0,0,0,0.08)';
+                            if (value <= 5) return 'rgba(220, 53, 69, 0.15)';
+                            if (value <= 7.5) return 'rgba(255, 193, 7, 0.15)';
+                            return 'rgba(40, 167, 69, 0.15)';
+                        },
+                        lineWidth: 1.5
+                    },
+                    angleLines: {
+                        color: 'rgba(0,0,0,0.08)',
+                        lineWidth: 1.5
+                    },
+                    pointLabels: {
+                        font: { size: 12, weight: 'bold' },
+                        color: '#333',
+                        padding: 15
+                    }
+                }
+            },
+            animation: {
+                duration: 1000,
+                easing: 'easeInOutQuart'
+            }
+        }
+    });
+</script>
+@stop
+
+{{-- 
+
 @extends('adminlte::page')
 
 @section('title', 'Detalle por Dimensión')
@@ -19,7 +130,7 @@
 
     <div class="row">
 
-        {{-- RADAR --}}
+        {{-- RADAR --}
         <div class="col-md-6">
             <div class="card">
                 <div class="card-header bg-primary text-white">
@@ -31,7 +142,7 @@
             </div>
         </div>
 
-        {{-- TABLA --}}
+        {{-- TABLA --}
         <div class="col-md-6">
             <div class="card">
                 <div class="card-header bg-primary text-white">
@@ -108,4 +219,4 @@
         }
     });
 </script>
-@stop
+@stop --}}

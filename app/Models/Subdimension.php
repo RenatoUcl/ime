@@ -22,5 +22,19 @@ class Subdimension extends Model
     {
         return $this->hasMany(Pregunta::class, 'id_subdimension', 'id');
     }
+
+    public function terminosVerificacion()
+    {
+        return $this->belongsToMany(
+            TerminoVerificacion::class,
+            'subdimension_terminos',
+            'id_subdimension',
+            'id_termino'
+        )
+        ->withPivot([
+            'peso',
+            'obligatorio'
+        ]);
+    }
     
 }

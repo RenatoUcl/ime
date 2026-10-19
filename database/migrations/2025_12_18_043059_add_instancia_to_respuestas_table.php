@@ -2,6 +2,7 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
@@ -11,7 +12,8 @@ return new class extends Migration
         Schema::table('respuestas', function (Blueprint $table) {
             if (!Schema::hasColumn('respuestas', 'id_encuesta_instancia')) {
                 $table->unsignedBigInteger('id_encuesta_instancia')
-                    ->after('id_encuesta');
+                    ->after('id_encuesta')
+                    ->nullable();
             }
 
             // ÚNICO: una respuesta por (encuesta, período, usuario, pregunta)
@@ -23,6 +25,14 @@ return new class extends Migration
 
             $table->index(['id_encuesta', 'id_encuesta_instancia'], 'idx_respuestas_enc_inst');
         });
+
+        // Limpiar valores inválidos antes de agregar FK
+        DB::table('respuestas')
+            ->where('id_encuesta_instancia', 0)
+            ->orWhereNotIn('id_encuesta_instancia', function ($query) {
+                $query->select('id')->from('encuesta_instancias');
+            })
+            ->update(['id_encuesta_instancia' => null]);
 
         Schema::table('respuestas', function (Blueprint $table) {
             $table->foreign('id_encuesta_instancia')

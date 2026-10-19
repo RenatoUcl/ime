@@ -337,6 +337,16 @@ return [
             'route' => 'indice.index',
         ],
         [
+            'text'  => 'Medios de Verificacion',
+            'icon'  => 'fas fa-fw fa-file',
+            'route' => 'medios-verificacion.index',
+        ],
+        [
+            'text'  => 'Terminos de Verificacion',
+            'icon'  => 'fas fa-fw fa-file',
+            'route' => 'terminos-verificacion.index',
+        ],
+        [
             'text' => 'Administracion',
             'icon' => 'fas fa-cog',
             'submenu' => [
