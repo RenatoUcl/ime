@@ -11,6 +11,7 @@ use App\Models\CabeceraAlternativa;
 use App\Models\CabeceraRespuesta;
 use App\Models\EncuestaInstancia;
 use App\Models\EncuestasUsuario;
+use App\Models\EncuestaUsuarioDimension;
 use App\Models\Dimension;
 use App\Models\Subdimension;
 
@@ -25,7 +26,15 @@ class ResponderController extends Controller
 {
     public function index(Request $request): View
     {
-        $encuestas = Encuesta::where('estado', 1)->with('linea')->get();
+        $user = Auth::user();
+        $usuarioId = $user->id;
+
+        $encuestasUsuarioDim = EncuestaUsuarioDimension::where('id_usuario', $usuarioId)
+                                ->groupBy('id_encuesta')
+                                ->pluck('id_encuesta');
+        $encuestas = Encuesta::where('estado', 1)
+                     ->whereIn('id', $encuestasUsuarioDim)
+                     ->with('linea')->get();
         return view('responder.index', compact('encuestas'));
     }
 
