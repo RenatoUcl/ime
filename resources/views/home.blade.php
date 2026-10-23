@@ -15,8 +15,9 @@
                             {{ session('status') }}
                         </div>
                     @endif
-                    <table class="table table-bordered">
-                        <thead>
+
+                    <table class="table table-striped table-bordered">
+                        <thead class="table-primary">
                             <tr colspan="2">
                                 <h3>Encuestas Asignadas</h3>
                             </tr>
@@ -38,10 +39,11 @@
                             @endforelse
                         </tbody>
                     </table>
+
                     @if(auth()->user()->hasRole('admin'))
                         <br><br>
-                        <table class="table table-bordered">
-                            <thead>
+                        <table class="table table-striped table-bordered">
+                            <thead class="table-primary">
                                 <tr>
                                     <th>Nombre de la Encuesta</th>
                                     <th>Total Asignados</th>
