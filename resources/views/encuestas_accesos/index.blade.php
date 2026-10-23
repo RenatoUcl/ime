@@ -40,9 +40,11 @@
             <a href="{{ route('encuestas.accesos.create') }}" class="btn btn-primary">
                 <i class="fa fa-plus"></i> Nuevo Acceso
             </a>
-            <a href="{{ route('encuestas.accesos.activate') }}" class="btn btn-success right-0">
-                <i class="fa fa-refresh"></i> Abrir todas las encuestas
-            </a>
+            @if(auth()->user()->hasRole('admin'))
+                <a href="{{ route('encuestas.accesos.activate') }}" class="btn btn-success right-0">
+                    <i class="fa fa-refresh"></i> Abrir todas las encuestas
+                </a>
+            @endif
         </div>
 
         <div class="card-body table-responsive">
